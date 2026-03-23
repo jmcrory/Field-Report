@@ -337,12 +337,57 @@ function startReport() {
 }
 
 // ── SPEECH SYNTHESIS ─────────────────────────────────────────
+// Preferred voices in order — iOS enhanced/Siri voices sound most natural
+const PREFERRED_VOICES = [
+  'Samantha (Enhanced)',
+  'Samantha',
+  'Aaron',
+  'Aaron (Enhanced)',
+  'Karen',
+  'Karen (Enhanced)',
+  'Daniel',
+  'Daniel (Enhanced)',
+  'Moira',
+];
+
+let selectedVoice = null;
+
+function pickVoice() {
+  if (selectedVoice) return;
+  const voices = window.speechSynthesis.getVoices();
+  if (!voices.length) return;
+  // Try preferred list first
+  for (const name of PREFERRED_VOICES) {
+    const match = voices.find(v => v.name === name);
+    if (match) { selectedVoice = match; return; }
+  }
+  // Fall back to any enhanced English voice
+  const enhanced = voices.find(v => v.lang.startsWith('en') && v.name.includes('Enhanced'));
+  if (enhanced) { selectedVoice = enhanced; return; }
+  // Fall back to any local English voice
+  const local = voices.find(v => v.lang.startsWith('en') && v.localService);
+  if (local) { selectedVoice = local; return; }
+  // Last resort: first English voice
+  const any = voices.find(v => v.lang.startsWith('en'));
+  if (any) selectedVoice = any;
+}
+
+// Voices load async on iOS — listen for the event
+if (window.speechSynthesis) {
+  window.speechSynthesis.onvoiceschanged = pickVoice;
+  pickVoice(); // also try immediately
+}
+
 function speak(text) {
   if (!window.speechSynthesis) return;
   window.speechSynthesis.cancel();
   setTimeout(() => {
+    pickVoice();
     const u = new SpeechSynthesisUtterance(text);
-    u.rate = 0.92; u.pitch = 1; u.volume = 1;
+    if (selectedVoice) u.voice = selectedVoice;
+    u.rate = 0.88;
+    u.pitch = 1;
+    u.volume = 1;
     window.speechSynthesis.speak(u);
   }, 150);
 }
