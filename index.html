@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Field Report">
+<title>Field Report</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f0e; --surface: #161a18; --surface2: #1e2420;
+    --border: #2a3230; --accent: #4eff91; --accent-dim: #1a4a30;
+    --text: #e8ede9; --muted: #6b7a70; --danger: #ff5a5a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; min-height: 100vh; min-height: 100dvh; overflow-x: hidden; }
+  .screen { display: none; flex-direction: column; min-height: 100vh; min-height: 100dvh; }
+  .screen.active { display: flex; }
+
+  .header { padding: 56px 24px 20px; border-bottom: 1px solid var(--border); background: var(--surface); position: sticky; top: 0; z-index: 10; }
+  .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+  .app-label { font-size: 10px; font-family: 'DM Mono', monospace; color: var(--accent); letter-spacing: 0.15em; text-transform: uppercase; }
+  .header h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
+  .progress-bar { height: 2px; background: var(--border); border-radius: 2px; margin-top: 14px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.4s cubic-bezier(0.4,0,0.2,1); }
+  .step-counter { font-size: 11px; font-family: 'DM Mono', monospace; color: var(--muted); }
+
+  .field-body { flex: 1; display: flex; flex-direction: column; padding: 32px 24px 24px; gap: 24px; overflow-y: auto; }
+  .field-question { font-size: 28px; font-weight: 700; line-height: 1.15; letter-spacing: -0.02em; }
+  .field-hint { font-size: 13px; color: var(--muted); font-family: 'DM Mono', monospace; margin-top: 6px; }
+
+  .transcript-box { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 18px; min-height: 100px; font-size: 16px; line-height: 1.6; position: relative; transition: border-color 0.2s; }
+  .transcript-box.listening { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(78,255,145,0.08); }
+  .transcript-text { outline: none; min-height: 60px; color: var(--text); }
+  [contenteditable]:empty:before { content: attr(data-placeholder); color: var(--muted); font-style: italic; pointer-events: none; }
+
+  .listening-indicator { display: none; align-items: center; gap: 4px; position: absolute; top: 14px; right: 14px; }
+  .listening-indicator.active { display: flex; }
+  .listening-indicator span { display: block; width: 4px; border-radius: 2px; background: var(--accent); animation: wave 0.8s ease-in-out infinite; }
+  .listening-indicator span:nth-child(1) { height: 8px; animation-delay: 0s; }
+  .listening-indicator span:nth-child(2) { height: 14px; animation-delay: 0.1s; }
+  .listening-indicator span:nth-child(3) { height: 10px; animation-delay: 0.2s; }
+  .listening-indicator span:nth-child(4) { height: 16px; animation-delay: 0.15s; }
+  .listening-indicator span:nth-child(5) { height: 6px; animation-delay: 0.05s; }
+  @keyframes wave { 0%,100% { transform: scaleY(0.5); opacity: 0.5; } 50% { transform: scaleY(1); opacity: 1; } }
+
+  .btn-mic { background: var(--accent); color: #000; border: none; border-radius: 100px; padding: 18px 32px; font-size: 15px; font-weight: 700; font-family: 'Syne', sans-serif; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: transform 0.15s, background 0.15s; box-shadow: 0 4px 24px rgba(78,255,145,0.25); width: 100%; -webkit-appearance: none; touch-action: manipulation; }
+  .btn-mic:active { transform: scale(0.97); }
+  .btn-mic.listening { background: var(--danger); box-shadow: 0 4px 24px rgba(255,90,90,0.3); color: #fff; }
+  .btn-mic svg { width: 20px; height: 20px; flex-shrink: 0; }
+
+  .btn-row { display: flex; gap: 12px; }
+  .btn-secondary { flex: 1; background: var(--surface2); color: var(--text); border: 1px solid var(--border); border-radius: 100px; padding: 16px; font-size: 14px; font-weight: 600; font-family: 'Syne', sans-serif; cursor: pointer; text-align: center; -webkit-appearance: none; touch-action: manipulation; }
+  .btn-secondary:active { background: var(--border); }
+  .btn-next { flex: 2; background: var(--text); color: #000; border: none; border-radius: 100px; padding: 16px; font-size: 15px; font-weight: 700; font-family: 'Syne', sans-serif; cursor: pointer; -webkit-appearance: none; touch-action: manipulation; }
+  .btn-next:active { opacity: 0.8; }
+
+  .obs-list { display: flex; flex-direction: column; gap: 12px; }
+  .obs-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; display: flex; gap: 14px; align-items: flex-start; animation: slideIn 0.3s ease; }
+  @keyframes slideIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .obs-num { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--accent); background: var(--accent-dim); border-radius: 6px; padding: 3px 7px; flex-shrink: 0; margin-top: 2px; }
+  .obs-text { font-size: 14px; line-height: 1.55; flex: 1; }
+  .obs-delete { background: none; border: none; color: var(--muted); cursor: pointer; padding: 2px; font-size: 18px; line-height: 1; flex-shrink: 0; touch-action: manipulation; }
+  .obs-empty { text-align: center; color: var(--muted); font-size: 14px; font-family: 'DM Mono', monospace; padding: 32px 0; }
+  .obs-add-btn { background: var(--surface2); border: 1px dashed var(--border); border-radius: 14px; padding: 16px; color: var(--accent); font-size: 14px; font-weight: 600; font-family: 'Syne', sans-serif; cursor: pointer; text-align: center; width: 100%; -webkit-appearance: none; touch-action: manipulation; }
+  .obs-add-btn:active { background: var(--accent-dim); }
+
+  .review-body { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 20px; }
+  .review-section-label { font-size: 10px; font-family: 'DM Mono', monospace; color: var(--accent); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 10px; }
+  .review-field { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+  .review-field-label { font-size: 10px; font-family: 'DM Mono', monospace; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+  .review-field-value { font-size: 15px; line-height: 1.5; }
+
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; align-items: flex-end; }
+  .modal-overlay.active { display: flex; }
+  .modal-sheet { background: var(--surface); border-radius: 24px 24px 0 0; padding: 24px 24px 44px; width: 100%; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 16px; animation: sheetUp 0.3s cubic-bezier(0.4,0,0.2,1); }
+  @keyframes sheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .modal-title { font-size: 18px; font-weight: 700; }
+
+  .status-msg { font-size: 12px; font-family: 'DM Mono', monospace; color: var(--muted); text-align: center; min-height: 18px; line-height: 1.5; }
+  .status-msg.error { color: var(--danger); }
+  .status-msg.success { color: var(--accent); }
+
+  .obs-screen-body { flex: 1; padding: 24px; display: flex; flex-direction: column; gap: 20px; overflow-y: auto; }
+  .obs-footer { padding: 20px 24px 36px; border-top: 1px solid var(--border); }
+
+  .btn-export { background: var(--accent); color: #000; border: none; border-radius: 100px; padding: 18px; font-size: 16px; font-weight: 800; font-family: 'Syne', sans-serif; cursor: pointer; text-align: center; box-shadow: 0 4px 24px rgba(78,255,145,0.25); width: 100%; -webkit-appearance: none; touch-action: manipulation; }
+  .btn-export:active { opacity: 0.85; }
+  .btn-restart { background: none; border: none; color: var(--muted); font-size: 14px; font-family: 'Syne', sans-serif; cursor: pointer; text-align: center; padding: 8px; width: 100%; touch-action: manipulation; }
+  .export-text-area { background: var(--surface2); border: 1px solid var(--border); border-radius: 14px; padding: 16px; font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text); width: 100%; height: 180px; resize: none; outline: none; }
+</style>
+</head>
+<body>
+
+<!-- ── WELCOME ─────────────────────────────────────────────── -->
+<div class="screen active" id="screen-welcome">
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:48px 32px;text-align:center;gap:24px;">
+    <div style="width:72px;height:72px;border-radius:20px;background:var(--accent-dim);border:1.5px solid var(--accent);display:flex;align-items:center;justify-content:center;">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#4eff91" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
+        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+        <line x1="12" y1="19" x2="12" y2="22"/>
+      </svg>
+    </div>
+    <div>
+      <div style="font-size:10px;font-family:'DM Mono',monospace;color:var(--accent);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:8px;">Field Report Tool</div>
+      <h1 style="font-size:32px;font-weight:800;letter-spacing:-0.03em;line-height:1.1;">Capture your<br>report by voice.</h1>
+    </div>
+    <p style="font-size:14px;color:var(--muted);line-height:1.7;font-family:'DM Mono',monospace;max-width:280px;">Walk through each field hands-free. The app reads each prompt aloud and transcribes your response.</p>
+    <button class="btn-next" style="width:100%;flex:none;padding:18px;" onclick="startReport()">Start New Report →</button>
+  </div>
+  <div style="padding:0 32px 40px;text-align:center;">
+    <p style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;">Safari will ask for microphone access<br>when you tap the record button.</p>
+  </div>
+</div>
+
+<!-- ── FIELD CAPTURE ───────────────────────────────────────── -->
+<div class="screen" id="screen-field">
+  <div class="header">
+    <div class="header-top">
+      <span class="app-label">Field Report</span>
+      <span class="step-counter" id="step-counter">1 / 5</span>
+    </div>
+    <h1 id="field-name-header">Project Location</h1>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:20%"></div></div>
+  </div>
+  <div class="field-body">
+    <div>
+      <div class="field-question" id="field-question">Where is this project located?</div>
+      <div class="field-hint" id="field-hint">e.g. address, building name, or area</div>
+    </div>
+    <div class="transcript-box" id="transcript-box">
+      <div class="listening-indicator" id="listening-indicator"><span></span><span></span><span></span><span></span><span></span></div>
+      <div class="transcript-text" id="transcript-text" contenteditable="true" data-placeholder="Tap the mic and speak, or type here..."></div>
+    </div>
+    <div class="status-msg" id="field-status"></div>
+    <button class="btn-mic" id="btn-mic" onclick="toggleListening()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
+        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+        <line x1="12" y1="19" x2="12" y2="22"/>
+      </svg>
+      <span id="btn-mic-label">Tap to Record</span>
+    </button>
+    <div class="btn-row">
+      <button class="btn-secondary" onclick="skipField()">Skip</button>
+      <button class="btn-next" onclick="nextField()">Next →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── OBSERVATIONS ────────────────────────────────────────── -->
+<div class="screen" id="screen-observations">
+  <div class="header">
+    <div class="header-top"><span class="app-label">Field Report</span></div>
+    <h1>Observations</h1>
+  </div>
+  <div class="obs-screen-body">
+    <div style="font-size:13px;color:var(--muted);font-family:'DM Mono',monospace;">Add each item you observed. Each will be numbered and referenced in the final report.</div>
+    <div class="obs-list" id="obs-list"><div class="obs-empty">No observations yet.<br>Tap below to add one.</div></div>
+    <button class="obs-add-btn" onclick="openObsModal()">+ Add Observation</button>
+  </div>
+  <div class="obs-footer">
+    <div class="btn-row">
+      <button class="btn-secondary" onclick="goBackToFields()">← Back</button>
+      <button class="btn-next" onclick="showScreen('screen-review')">Review →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── OBSERVATION MODAL ───────────────────────────────────── -->
+<div class="modal-overlay" id="obs-modal">
+  <div class="modal-sheet">
+    <div class="modal-title">New Observation</div>
+    <div class="transcript-box" id="obs-transcript-box">
+      <div class="listening-indicator" id="obs-listening-indicator"><span></span><span></span><span></span><span></span><span></span></div>
+      <div class="transcript-text" id="obs-transcript-text" contenteditable="true" data-placeholder="Tap the mic and describe what you observed..."></div>
+    </div>
+    <div class="status-msg" id="obs-status"></div>
+    <button class="btn-mic" id="obs-btn-mic" onclick="toggleObsListening()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
+        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+        <line x1="12" y1="19" x2="12" y2="22"/>
+      </svg>
+      <span id="obs-mic-label">Record Observation</span>
+    </button>
+    <div class="btn-row">
+      <button class="btn-secondary" onclick="closeObsModal()">Cancel</button>
+      <button class="btn-next" onclick="saveObservation()">Add →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── REVIEW ──────────────────────────────────────────────── -->
+<div class="screen" id="screen-review">
+  <div class="header">
+    <div class="header-top"><span class="app-label">Field Report</span></div>
+    <h1>Review & Export</h1>
+  </div>
+  <div class="review-body" id="review-body"></div>
+  <div style="padding:20px 24px 36px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:12px;">
+    <button class="btn-export" onclick="exportReport()">Export Report</button>
+    <button class="btn-secondary" style="text-align:center;" onclick="showScreen('screen-observations')">← Edit Observations</button>
+    <button class="btn-restart" onclick="confirmRestart()">Start Over</button>
+  </div>
+</div>
+
+<!-- ── EXPORT / COPY ───────────────────────────────────────── -->
+<div class="screen" id="screen-export">
+  <div class="header">
+    <div class="header-top"><span class="app-label">Field Report</span></div>
+    <h1>Export Data</h1>
+  </div>
+  <div style="flex:1;padding:24px;display:flex;flex-direction:column;gap:16px;overflow-y:auto;">
+    <p style="font-size:13px;color:var(--muted);font-family:'DM Mono',monospace;line-height:1.7;">Copy the text below and paste it into an email or Notes app to save your report.</p>
+    <textarea class="export-text-area" id="export-text-area" readonly></textarea>
+    <button class="btn-export" onclick="copyToClipboard()">Copy to Clipboard</button>
+    <div class="status-msg" id="copy-status"></div>
+    <p style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;text-align:center;line-height:1.6;">Paste into an email to yourself, then open on your computer to generate the formatted Word doc.</p>
+  </div>
+  <div style="padding:20px 24px 36px;border-top:1px solid var(--border);">
+    <button class="btn-restart" onclick="confirmRestart()">Start New Report</button>
+  </div>
+</div>
+
+<script>
+const fields = [
+  { key: 'project_location',   label: 'Project Location',   question: 'Where is this project located?',           hint: 'e.g. address, building name, or area' },
+  { key: 'inspector_name',     label: 'Inspector Name',     question: 'What is the name of the inspector?',       hint: 'Full name or initials' },
+  { key: 'inspection_date',    label: 'Inspection Date',    question: 'What is today\'s date?',                   hint: 'e.g. March 22, 2026' },
+  { key: 'weather_conditions', label: 'Weather Conditions', question: 'What are the current weather conditions?', hint: 'e.g. clear, overcast, raining' },
+  { key: 'site_contact',       label: 'Site Contact',       question: 'Who is the site contact or client name?',  hint: 'Name and role if known' },
+];
+
+let currentField = 0;
+let reportData = {};
+let observations = [];
+let recognition = null;
+let isListening = false;
+let obsRecognition = null;
+let obsIsListening = false;
+
+// ── NAVIGATION ───────────────────────────────────────────────
+function showScreen(id) {
+  if (id === 'screen-review') buildReviewScreen();
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+// ── START ────────────────────────────────────────────────────
+function startReport() {
+  currentField = 0;
+  reportData = {};
+  observations = [];
+  renderField();
+  showScreen('screen-field');
+  // Speak the first field after a short delay
+  setTimeout(() => speakField(0), 600);
+}
+
+// ── SPEECH SYNTHESIS ─────────────────────────────────────────
+function speak(text) {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  setTimeout(() => {
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = 0.92; u.pitch = 1; u.volume = 1;
+    window.speechSynthesis.speak(u);
+  }, 150);
+}
+function speakField(i) { speak(fields[i].question); }
+
+// ── RENDER FIELD ─────────────────────────────────────────────
+function renderField() {
+  const f = fields[currentField];
+  document.getElementById('field-name-header').textContent = f.label;
+  document.getElementById('field-question').textContent = f.question;
+  document.getElementById('field-hint').textContent = f.hint;
+  document.getElementById('step-counter').textContent = `${currentField + 1} / ${fields.length}`;
+  document.getElementById('progress-fill').style.width = `${((currentField + 1) / fields.length) * 100}%`;
+  document.getElementById('transcript-text').textContent = reportData[f.key] || '';
+  document.getElementById('field-status').textContent = '';
+  document.getElementById('field-status').className = 'status-msg';
+  stopListening();
+}
+
+// ── SPEECH RECOGNITION ───────────────────────────────────────
+function getSpeechAPI() {
+  return window.SpeechRecognition || window.webkitSpeechRecognition || null;
+}
+
+function toggleListening() {
+  if (isListening) { stopListening(); return; }
+  startListening();
+}
+
+function startListening() {
+  const API = getSpeechAPI();
+  if (!API) {
+    setStatus('field-status', 'Speech recognition not available — please type your answer.', 'error');
+    return;
+  }
+
+  // Cancel any speech so mic can open cleanly
+  window.speechSynthesis && window.speechSynthesis.cancel();
+
+  recognition = new API();
+  recognition.continuous = false;
+  recognition.interimResults = true;
+  recognition.lang = 'en-US';
+
+  recognition.onstart = () => {
+    isListening = true;
+    document.getElementById('btn-mic').classList.add('listening');
+    document.getElementById('btn-mic-label').textContent = 'Tap to Stop';
+    document.getElementById('listening-indicator').classList.add('active');
+    document.getElementById('transcript-box').classList.add('listening');
+    setStatus('field-status', 'Listening…', '');
+  };
+
+  recognition.onresult = (e) => {
+    let final = '', interim = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) final += e.results[i][0].transcript;
+      else interim += e.results[i][0].transcript;
+    }
+    const el = document.getElementById('transcript-text');
+    const existing = el.textContent.trim();
+    el.textContent = (existing ? existing + ' ' : '') + (final || interim);
+  };
+
+  recognition.onerror = (e) => {
+    let msg = 'Could not access microphone.';
+    if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+      msg = 'Mic blocked. Tap AA in address bar → Website Settings → Microphone: Allow, then reload.';
+    } else if (e.error === 'no-speech') {
+      msg = 'No speech detected — try again.';
+    } else if (e.error === 'network') {
+      msg = 'Network error. Check your connection.';
+    }
+    setStatus('field-status', msg, 'error');
+    stopListening();
+  };
+
+  recognition.onend = () => stopListening();
+
+  try {
+    recognition.start();
+  } catch(err) {
+    setStatus('field-status', 'Could not start recording. Try again.', 'error');
+    recognition = null;
+  }
+}
+
+function stopListening() {
+  if (recognition) { try { recognition.stop(); } catch(e){} recognition = null; }
+  isListening = false;
+  document.getElementById('btn-mic').classList.remove('listening');
+  document.getElementById('btn-mic-label').textContent = 'Tap to Record';
+  document.getElementById('listening-indicator').classList.remove('active');
+  document.getElementById('transcript-box').classList.remove('listening');
+  const s = document.getElementById('field-status');
+  if (s.textContent === 'Listening…') { s.textContent = ''; s.className = 'status-msg'; }
+}
+
+function nextField() {
+  const text = document.getElementById('transcript-text').textContent.trim();
+  if (text) reportData[fields[currentField].key] = text;
+  currentField++;
+  if (currentField >= fields.length) {
+    renderObservations();
+    showScreen('screen-observations');
+    setTimeout(() => speak('Now add your observations. Tap the plus button to begin.'), 500);
+    return;
+  }
+  renderField();
+  setTimeout(() => speakField(currentField), 300);
+}
+
+function skipField() {
+  currentField++;
+  if (currentField >= fields.length) { renderObservations(); showScreen('screen-observations'); return; }
+  renderField();
+  setTimeout(() => speakField(currentField), 300);
+}
+
+function goBackToFields() {
+  currentField = fields.length - 1;
+  renderField();
+  showScreen('screen-field');
+}
+
+// ── OBSERVATIONS ─────────────────────────────────────────────
+function openObsModal() {
+  document.getElementById('obs-transcript-text').textContent = '';
+  document.getElementById('obs-status').textContent = '';
+  document.getElementById('obs-modal').classList.add('active');
+  setTimeout(() => speak('Describe what you observed.'), 300);
+}
+
+function closeObsModal() {
+  stopObsListening();
+  document.getElementById('obs-modal').classList.remove('active');
+}
+
+function saveObservation() {
+  const text = document.getElementById('obs-transcript-text').textContent.trim();
+  if (!text) { setStatus('obs-status', 'Please add a description first.', 'error'); return; }
+  observations.push(text);
+  closeObsModal();
+  renderObservations();
+}
+
+function renderObservations() {
+  const list = document.getElementById('obs-list');
+  if (!observations.length) {
+    list.innerHTML = '<div class="obs-empty">No observations yet.<br>Tap below to add one.</div>';
+    return;
+  }
+  list.innerHTML = observations.map((obs, i) => `
+    <div class="obs-card">
+      <span class="obs-num">OBS ${i+1}</span>
+      <span class="obs-text">${obs}</span>
+      <button class="obs-delete" onclick="deleteObs(${i})">×</button>
+    </div>`).join('');
+}
+
+function deleteObs(i) { observations.splice(i, 1); renderObservations(); }
+
+function toggleObsListening() { obsIsListening ? stopObsListening() : startObsListening(); }
+
+function startObsListening() {
+  const API = getSpeechAPI();
+  if (!API) { setStatus('obs-status', 'Speech not available — please type.', 'error'); return; }
+  window.speechSynthesis && window.speechSynthesis.cancel();
+
+  obsRecognition = new API();
+  obsRecognition.continuous = false;
+  obsRecognition.interimResults = true;
+  obsRecognition.lang = 'en-US';
+
+  obsRecognition.onstart = () => {
+    obsIsListening = true;
+    document.getElementById('obs-btn-mic').classList.add('listening');
+    document.getElementById('obs-mic-label').textContent = 'Tap to Stop';
+    document.getElementById('obs-listening-indicator').classList.add('active');
+    document.getElementById('obs-transcript-box').classList.add('listening');
+    setStatus('obs-status', 'Listening…', '');
+  };
+
+  obsRecognition.onresult = (e) => {
+    let final = '', interim = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) final += e.results[i][0].transcript;
+      else interim += e.results[i][0].transcript;
+    }
+    const el = document.getElementById('obs-transcript-text');
+    const existing = el.textContent.trim();
+    el.textContent = (existing ? existing + ' ' : '') + (final || interim);
+  };
+
+  obsRecognition.onerror = (e) => {
+    setStatus('obs-status', e.error === 'no-speech' ? 'No speech detected.' : `Mic error: ${e.error}`, 'error');
+    stopObsListening();
+  };
+
+  obsRecognition.onend = () => stopObsListening();
+
+  try { obsRecognition.start(); }
+  catch(err) { setStatus('obs-status', 'Could not start recording.', 'error'); obsRecognition = null; }
+}
+
+function stopObsListening() {
+  if (obsRecognition) { try { obsRecognition.stop(); } catch(e){} obsRecognition = null; }
+  obsIsListening = false;
+  document.getElementById('obs-btn-mic').classList.remove('listening');
+  document.getElementById('obs-mic-label').textContent = 'Record Observation';
+  document.getElementById('obs-listening-indicator').classList.remove('active');
+  document.getElementById('obs-transcript-box').classList.remove('listening');
+  const s = document.getElementById('obs-status');
+  if (s.textContent === 'Listening…') { s.textContent = ''; s.className = 'status-msg'; }
+}
+
+// ── REVIEW ───────────────────────────────────────────────────
+function buildReviewScreen() {
+  let html = '<div><div class="review-section-label">Report Fields</div>';
+  fields.forEach(f => {
+    const val = reportData[f.key] || '<span style="color:var(--muted);font-style:italic">Not provided</span>';
+    html += `<div class="review-field"><div class="review-field-label">${f.label}</div><div class="review-field-value">${val}</div></div>`;
+  });
+  html += '</div>';
+  if (observations.length) {
+    html += `<div><div class="review-section-label">Observations (${observations.length})</div>`;
+    observations.forEach((obs, i) => {
+      html += `<div class="review-field"><div class="review-field-label">Observation ${i+1}</div><div class="review-field-value">${obs}</div></div>`;
+    });
+    html += '</div>';
+  }
+  document.getElementById('review-body').innerHTML = html;
+}
+
+// ── EXPORT ───────────────────────────────────────────────────
+function exportReport() {
+  const report = {
+    exported_at: new Date().toISOString(),
+    fields: reportData,
+    observations: observations.map((text, i) => ({
+      id: i + 1,
+      description: text,
+      photo_ref: `Photo ${i + 1}`
+    }))
+  };
+  document.getElementById('export-text-area').value = JSON.stringify(report, null, 2);
+  showScreen('screen-export');
+}
+
+function copyToClipboard() {
+  const text = document.getElementById('export-text-area').value;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text)
+      .then(() => setStatus('copy-status', '✓ Copied to clipboard!', 'success'))
+      .catch(() => fallbackCopy());
+  } else {
+    fallbackCopy();
+  }
+}
+
+function fallbackCopy() {
+  const ta = document.getElementById('export-text-area');
+  ta.select();
+  ta.setSelectionRange(0, 99999);
+  try {
+    document.execCommand('copy');
+    setStatus('copy-status', '✓ Copied!', 'success');
+  } catch(e) {
+    setStatus('copy-status', 'Select all the text above and copy manually.', 'error');
+  }
+}
+
+function confirmRestart() {
+  if (confirm('Start a new report? Current data will be cleared.')) {
+    showScreen('screen-welcome');
+  }
+}
+
+function setStatus(id, msg, type) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.className = 'status-msg' + (type ? ' ' + type : '');
+}
+</script>
+</body>
+</html>
