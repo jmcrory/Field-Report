@@ -47,9 +47,19 @@
   .listening-indicator span:nth-child(5) { height: 6px; animation-delay: 0.05s; }
   @keyframes wave { 0%,100% { transform: scaleY(0.5); opacity: 0.5; } 50% { transform: scaleY(1); opacity: 1; } }
 
-  .btn-mic { background: var(--accent); color: #000; border: none; border-radius: 100px; padding: 18px 32px; font-size: 15px; font-weight: 700; font-family: 'Syne', sans-serif; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: transform 0.15s, background 0.15s; box-shadow: 0 4px 24px rgba(78,255,145,0.25); width: 100%; -webkit-appearance: none; touch-action: manipulation; }
-  .btn-mic:active { transform: scale(0.97); }
-  .btn-mic.listening { background: var(--danger); box-shadow: 0 4px 24px rgba(255,90,90,0.3); color: #fff; }
+  /* Hold to record button */
+  .btn-mic {
+    background: var(--accent); color: #000; border: none; border-radius: 100px;
+    padding: 18px 32px; font-size: 15px; font-weight: 700; font-family: 'Syne', sans-serif;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
+    box-shadow: 0 4px 24px rgba(78,255,145,0.25); width: 100%; -webkit-appearance: none;
+    touch-action: none; user-select: none; -webkit-user-select: none;
+    transition: transform 0.1s, background 0.15s;
+  }
+  .btn-mic.listening {
+    background: var(--danger); box-shadow: 0 4px 24px rgba(255,90,90,0.3);
+    color: #fff; transform: scale(0.97);
+  }
   .btn-mic svg { width: 20px; height: 20px; flex-shrink: 0; }
 
   .btn-row { display: flex; gap: 12px; }
@@ -109,11 +119,11 @@
       <div style="font-size:10px;font-family:'DM Mono',monospace;color:var(--accent);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:8px;">Field Report Tool</div>
       <h1 style="font-size:32px;font-weight:800;letter-spacing:-0.03em;line-height:1.1;">Capture your<br>report by voice.</h1>
     </div>
-    <p style="font-size:14px;color:var(--muted);line-height:1.7;font-family:'DM Mono',monospace;max-width:280px;">Walk through each field hands-free. The app reads each prompt aloud and transcribes your response.</p>
+    <p style="font-size:14px;color:var(--muted);line-height:1.7;font-family:'DM Mono',monospace;max-width:280px;">Hold the mic button while you speak, release when done. The app reads each prompt aloud.</p>
     <button class="btn-next" style="width:100%;flex:none;padding:18px;" onclick="startReport()">Start New Report →</button>
   </div>
   <div style="padding:0 32px 40px;text-align:center;">
-    <p style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;">Safari will ask for microphone access<br>when you tap the record button.</p>
+    <p style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;">Safari will ask for microphone access<br>when you first hold the record button.</p>
   </div>
 </div>
 
@@ -134,16 +144,18 @@
     </div>
     <div class="transcript-box" id="transcript-box">
       <div class="listening-indicator" id="listening-indicator"><span></span><span></span><span></span><span></span><span></span></div>
-      <div class="transcript-text" id="transcript-text" contenteditable="true" data-placeholder="Tap the mic and speak, or type here..."></div>
+      <div class="transcript-text" id="transcript-text" contenteditable="true" data-placeholder="Hold the mic button and speak, or type here..."></div>
     </div>
     <div class="status-msg" id="field-status"></div>
-    <button class="btn-mic" id="btn-mic" onclick="toggleListening()">
+    <button class="btn-mic" id="btn-mic"
+      onmousedown="startListening('field')" onmouseup="stopListening('field')" onmouseleave="stopListening('field')"
+      ontouchstart="handleTouchStart(event,'field')" ontouchend="handleTouchEnd(event,'field')" ontouchcancel="handleTouchEnd(event,'field')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
         <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
         <line x1="12" y1="19" x2="12" y2="22"/>
       </svg>
-      <span id="btn-mic-label">Tap to Record</span>
+      <span id="btn-mic-label">Hold to Record</span>
     </button>
     <div class="btn-row">
       <button class="btn-secondary" onclick="skipField()">Skip</button>
@@ -177,16 +189,18 @@
     <div class="modal-title">New Observation</div>
     <div class="transcript-box" id="obs-transcript-box">
       <div class="listening-indicator" id="obs-listening-indicator"><span></span><span></span><span></span><span></span><span></span></div>
-      <div class="transcript-text" id="obs-transcript-text" contenteditable="true" data-placeholder="Tap the mic and describe what you observed..."></div>
+      <div class="transcript-text" id="obs-transcript-text" contenteditable="true" data-placeholder="Hold the mic and describe what you observed..."></div>
     </div>
     <div class="status-msg" id="obs-status"></div>
-    <button class="btn-mic" id="obs-btn-mic" onclick="toggleObsListening()">
+    <button class="btn-mic" id="obs-btn-mic"
+      onmousedown="startListening('obs')" onmouseup="stopListening('obs')" onmouseleave="stopListening('obs')"
+      ontouchstart="handleTouchStart(event,'obs')" ontouchend="handleTouchEnd(event,'obs')" ontouchcancel="handleTouchEnd(event,'obs')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
         <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
         <line x1="12" y1="19" x2="12" y2="22"/>
       </svg>
-      <span id="obs-mic-label">Record Observation</span>
+      <span id="obs-mic-label">Hold to Record</span>
     </button>
     <div class="btn-row">
       <button class="btn-secondary" onclick="closeObsModal()">Cancel</button>
@@ -239,10 +253,25 @@ const fields = [
 let currentField = 0;
 let reportData = {};
 let observations = [];
-let recognition = null;
+
+// One recognition instance shared, keyed by context
+let recog = null;
+let recogContext = null; // 'field' or 'obs'
 let isListening = false;
-let obsRecognition = null;
-let obsIsListening = false;
+
+// Tracks the committed (final) text before current session started
+// so we never double-append
+let committedText = { field: '', obs: '' };
+
+// ── TOUCH HANDLERS (prevent ghost click) ─────────────────────
+function handleTouchStart(e, ctx) {
+  e.preventDefault();
+  startListening(ctx);
+}
+function handleTouchEnd(e, ctx) {
+  e.preventDefault();
+  stopListening(ctx);
+}
 
 // ── NAVIGATION ───────────────────────────────────────────────
 function showScreen(id) {
@@ -252,14 +281,10 @@ function showScreen(id) {
   window.scrollTo(0, 0);
 }
 
-// ── START ────────────────────────────────────────────────────
 function startReport() {
-  currentField = 0;
-  reportData = {};
-  observations = [];
+  currentField = 0; reportData = {}; observations = [];
   renderField();
   showScreen('screen-field');
-  // Speak the first field after a short delay
   setTimeout(() => speakField(0), 600);
 }
 
@@ -283,98 +308,128 @@ function renderField() {
   document.getElementById('field-hint').textContent = f.hint;
   document.getElementById('step-counter').textContent = `${currentField + 1} / ${fields.length}`;
   document.getElementById('progress-fill').style.width = `${((currentField + 1) / fields.length) * 100}%`;
-  document.getElementById('transcript-text').textContent = reportData[f.key] || '';
-  document.getElementById('field-status').textContent = '';
-  document.getElementById('field-status').className = 'status-msg';
-  stopListening();
+  const existing = reportData[f.key] || '';
+  document.getElementById('transcript-text').textContent = existing;
+  committedText.field = existing;
+  setStatus('field-status', '', '');
 }
 
 // ── SPEECH RECOGNITION ───────────────────────────────────────
-function getSpeechAPI() {
-  return window.SpeechRecognition || window.webkitSpeechRecognition || null;
+function getSpeechAPI() { return window.SpeechRecognition || window.webkitSpeechRecognition || null; }
+
+function getElements(ctx) {
+  if (ctx === 'field') return {
+    btn: document.getElementById('btn-mic'),
+    label: document.getElementById('btn-mic-label'),
+    indicator: document.getElementById('listening-indicator'),
+    box: document.getElementById('transcript-box'),
+    text: document.getElementById('transcript-text'),
+    status: 'field-status'
+  };
+  return {
+    btn: document.getElementById('obs-btn-mic'),
+    label: document.getElementById('obs-mic-label'),
+    indicator: document.getElementById('obs-listening-indicator'),
+    box: document.getElementById('obs-transcript-box'),
+    text: document.getElementById('obs-transcript-text'),
+    status: 'obs-status'
+  };
 }
 
-function toggleListening() {
-  if (isListening) { stopListening(); return; }
-  startListening();
-}
-
-function startListening() {
+function startListening(ctx) {
+  if (isListening) return;
   const API = getSpeechAPI();
-  if (!API) {
-    setStatus('field-status', 'Speech recognition not available — please type your answer.', 'error');
-    return;
-  }
+  if (!API) { setStatus(ctx === 'field' ? 'field-status' : 'obs-status', 'Speech not supported — please type.', 'error'); return; }
 
-  // Cancel any speech so mic can open cleanly
   window.speechSynthesis && window.speechSynthesis.cancel();
 
-  recognition = new API();
-  recognition.continuous = false;
-  recognition.interimResults = true;
-  recognition.lang = 'en-US';
+  const el = getElements(ctx);
 
-  recognition.onstart = () => {
+  // Snapshot whatever text is already in the box as the base
+  committedText[ctx] = el.text.textContent.trim();
+
+  recog = new API();
+  recogContext = ctx;
+  recog.continuous = true;      // keep listening while held
+  recog.interimResults = true;
+  recog.lang = 'en-US';
+  recog.maxAlternatives = 1;
+
+  recog.onstart = () => {
     isListening = true;
-    document.getElementById('btn-mic').classList.add('listening');
-    document.getElementById('btn-mic-label').textContent = 'Tap to Stop';
-    document.getElementById('listening-indicator').classList.add('active');
-    document.getElementById('transcript-box').classList.add('listening');
-    setStatus('field-status', 'Listening…', '');
+    el.btn.classList.add('listening');
+    el.label.textContent = 'Release to Stop';
+    el.indicator.classList.add('active');
+    el.box.classList.add('listening');
+    setStatus(el.status, 'Listening…', '');
   };
 
-  recognition.onresult = (e) => {
-    let final = '', interim = '';
-    for (let i = e.resultIndex; i < e.results.length; i++) {
-      if (e.results[i].isFinal) final += e.results[i][0].transcript;
-      else interim += e.results[i][0].transcript;
+  recog.onresult = (e) => {
+    // Build the full transcript from ALL results in this session
+    let sessionText = '';
+    for (let i = 0; i < e.results.length; i++) {
+      sessionText += e.results[i][0].transcript;
     }
-    const el = document.getElementById('transcript-text');
-    const existing = el.textContent.trim();
-    el.textContent = (existing ? existing + ' ' : '') + (final || interim);
+    // Combine with whatever was there before this session
+    const base = committedText[ctx];
+    el.text.textContent = base ? base + ' ' + sessionText : sessionText;
   };
 
-  recognition.onerror = (e) => {
+  recog.onerror = (e) => {
     let msg = 'Could not access microphone.';
     if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
-      msg = 'Mic blocked. Tap AA in address bar → Website Settings → Microphone: Allow, then reload.';
+      msg = 'Mic blocked. Tap AA → Website Settings → Microphone: Allow, then reload.';
     } else if (e.error === 'no-speech') {
-      msg = 'No speech detected — try again.';
+      msg = '';
     } else if (e.error === 'network') {
-      msg = 'Network error. Check your connection.';
+      msg = 'Network error.';
     }
-    setStatus('field-status', msg, 'error');
-    stopListening();
+    if (msg) setStatus(el.status, msg, 'error');
+    resetMicUI(ctx);
   };
 
-  recognition.onend = () => stopListening();
+  recog.onend = () => {
+    // When recognition ends, lock in the current text as committed
+    committedText[ctx] = el.text.textContent.trim();
+    resetMicUI(ctx);
+  };
 
   try {
-    recognition.start();
+    recog.start();
   } catch(err) {
-    setStatus('field-status', 'Could not start recording. Try again.', 'error');
-    recognition = null;
+    setStatus(el.status, 'Could not start recording. Try again.', 'error');
+    recog = null;
   }
 }
 
-function stopListening() {
-  if (recognition) { try { recognition.stop(); } catch(e){} recognition = null; }
-  isListening = false;
-  document.getElementById('btn-mic').classList.remove('listening');
-  document.getElementById('btn-mic-label').textContent = 'Tap to Record';
-  document.getElementById('listening-indicator').classList.remove('active');
-  document.getElementById('transcript-box').classList.remove('listening');
-  const s = document.getElementById('field-status');
-  if (s.textContent === 'Listening…') { s.textContent = ''; s.className = 'status-msg'; }
+function stopListening(ctx) {
+  if (!isListening || recogContext !== ctx) return;
+  if (recog) {
+    try { recog.stop(); } catch(e) {}
+    recog = null;
+  }
 }
 
+function resetMicUI(ctx) {
+  isListening = false;
+  recogContext = null;
+  const el = getElements(ctx);
+  el.btn.classList.remove('listening');
+  el.label.textContent = 'Hold to Record';
+  el.indicator.classList.remove('active');
+  el.box.classList.remove('listening');
+  if (document.getElementById(el.status).textContent === 'Listening…') {
+    setStatus(el.status, '', '');
+  }
+}
+
+// ── FIELD NAV ────────────────────────────────────────────────
 function nextField() {
   const text = document.getElementById('transcript-text').textContent.trim();
   if (text) reportData[fields[currentField].key] = text;
   currentField++;
   if (currentField >= fields.length) {
-    renderObservations();
-    showScreen('screen-observations');
+    renderObservations(); showScreen('screen-observations');
     setTimeout(() => speak('Now add your observations. Tap the plus button to begin.'), 500);
     return;
   }
@@ -397,14 +452,16 @@ function goBackToFields() {
 
 // ── OBSERVATIONS ─────────────────────────────────────────────
 function openObsModal() {
-  document.getElementById('obs-transcript-text').textContent = '';
-  document.getElementById('obs-status').textContent = '';
+  const el = document.getElementById('obs-transcript-text');
+  el.textContent = '';
+  committedText.obs = '';
+  setStatus('obs-status', '', '');
   document.getElementById('obs-modal').classList.add('active');
   setTimeout(() => speak('Describe what you observed.'), 300);
 }
 
 function closeObsModal() {
-  stopObsListening();
+  stopListening('obs');
   document.getElementById('obs-modal').classList.remove('active');
 }
 
@@ -432,60 +489,6 @@ function renderObservations() {
 
 function deleteObs(i) { observations.splice(i, 1); renderObservations(); }
 
-function toggleObsListening() { obsIsListening ? stopObsListening() : startObsListening(); }
-
-function startObsListening() {
-  const API = getSpeechAPI();
-  if (!API) { setStatus('obs-status', 'Speech not available — please type.', 'error'); return; }
-  window.speechSynthesis && window.speechSynthesis.cancel();
-
-  obsRecognition = new API();
-  obsRecognition.continuous = false;
-  obsRecognition.interimResults = true;
-  obsRecognition.lang = 'en-US';
-
-  obsRecognition.onstart = () => {
-    obsIsListening = true;
-    document.getElementById('obs-btn-mic').classList.add('listening');
-    document.getElementById('obs-mic-label').textContent = 'Tap to Stop';
-    document.getElementById('obs-listening-indicator').classList.add('active');
-    document.getElementById('obs-transcript-box').classList.add('listening');
-    setStatus('obs-status', 'Listening…', '');
-  };
-
-  obsRecognition.onresult = (e) => {
-    let final = '', interim = '';
-    for (let i = e.resultIndex; i < e.results.length; i++) {
-      if (e.results[i].isFinal) final += e.results[i][0].transcript;
-      else interim += e.results[i][0].transcript;
-    }
-    const el = document.getElementById('obs-transcript-text');
-    const existing = el.textContent.trim();
-    el.textContent = (existing ? existing + ' ' : '') + (final || interim);
-  };
-
-  obsRecognition.onerror = (e) => {
-    setStatus('obs-status', e.error === 'no-speech' ? 'No speech detected.' : `Mic error: ${e.error}`, 'error');
-    stopObsListening();
-  };
-
-  obsRecognition.onend = () => stopObsListening();
-
-  try { obsRecognition.start(); }
-  catch(err) { setStatus('obs-status', 'Could not start recording.', 'error'); obsRecognition = null; }
-}
-
-function stopObsListening() {
-  if (obsRecognition) { try { obsRecognition.stop(); } catch(e){} obsRecognition = null; }
-  obsIsListening = false;
-  document.getElementById('obs-btn-mic').classList.remove('listening');
-  document.getElementById('obs-mic-label').textContent = 'Record Observation';
-  document.getElementById('obs-listening-indicator').classList.remove('active');
-  document.getElementById('obs-transcript-box').classList.remove('listening');
-  const s = document.getElementById('obs-status');
-  if (s.textContent === 'Listening…') { s.textContent = ''; s.className = 'status-msg'; }
-}
-
 // ── REVIEW ───────────────────────────────────────────────────
 function buildReviewScreen() {
   let html = '<div><div class="review-section-label">Report Fields</div>';
@@ -510,9 +513,7 @@ function exportReport() {
     exported_at: new Date().toISOString(),
     fields: reportData,
     observations: observations.map((text, i) => ({
-      id: i + 1,
-      description: text,
-      photo_ref: `Photo ${i + 1}`
+      id: i + 1, description: text, photo_ref: `Photo ${i + 1}`
     }))
   };
   document.getElementById('export-text-area').value = JSON.stringify(report, null, 2);
@@ -525,27 +526,18 @@ function copyToClipboard() {
     navigator.clipboard.writeText(text)
       .then(() => setStatus('copy-status', '✓ Copied to clipboard!', 'success'))
       .catch(() => fallbackCopy());
-  } else {
-    fallbackCopy();
-  }
+  } else { fallbackCopy(); }
 }
 
 function fallbackCopy() {
   const ta = document.getElementById('export-text-area');
-  ta.select();
-  ta.setSelectionRange(0, 99999);
-  try {
-    document.execCommand('copy');
-    setStatus('copy-status', '✓ Copied!', 'success');
-  } catch(e) {
-    setStatus('copy-status', 'Select all the text above and copy manually.', 'error');
-  }
+  ta.select(); ta.setSelectionRange(0, 99999);
+  try { document.execCommand('copy'); setStatus('copy-status', '✓ Copied!', 'success'); }
+  catch(e) { setStatus('copy-status', 'Select all text above and copy manually.', 'error'); }
 }
 
 function confirmRestart() {
-  if (confirm('Start a new report? Current data will be cleared.')) {
-    showScreen('screen-welcome');
-  }
+  if (confirm('Start a new report? Current data will be cleared.')) showScreen('screen-welcome');
 }
 
 function setStatus(id, msg, type) {
