@@ -104,12 +104,26 @@
   .btn-export { background: var(--accent); color: #000; border: none; border-radius: 100px; padding: 18px; font-size: 16px; font-weight: 800; font-family: 'Syne', sans-serif; cursor: pointer; text-align: center; box-shadow: 0 4px 24px rgba(78,255,145,0.25); width: 100%; -webkit-appearance: none; touch-action: manipulation; }
   .btn-export:active { opacity: 0.85; }
   .btn-restart { background: none; border: none; color: var(--muted); font-size: 14px; font-family: 'Syne', sans-serif; cursor: pointer; text-align: center; padding: 8px; width: 100%; touch-action: manipulation; }
-  .export-text-area { background: var(--surface2); border: 1px solid var(--border); border-radius: 14px; padding: 16px; font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text); width: 100%; height: 180px; resize: none; outline: none; }
 
   /* Permission screen */
   .perm-btn { background: var(--accent); color: #000; border: none; border-radius: 100px; padding: 18px 32px; font-size: 16px; font-weight: 800; font-family: 'Syne', sans-serif; cursor: pointer; width: 100%; touch-action: manipulation; -webkit-appearance: none; box-shadow: 0 4px 24px rgba(78,255,145,0.25); }
   .perm-btn:active { opacity: 0.85; }
   .perm-btn.granted { background: var(--surface2); color: var(--accent); box-shadow: none; border: 1px solid var(--accent); }
+
+  /* Clear field button */
+  .btn-clear-field { background: none; border: 1px solid var(--border); border-radius: 100px; padding: 10px 18px; font-size: 12px; font-family: 'DM Mono', monospace; color: var(--muted); cursor: pointer; touch-action: manipulation; align-self: flex-start; }
+  .btn-clear-field:active { background: var(--surface2); color: var(--danger); border-color: var(--danger); }
+
+  /* Photo picker in observation modal */
+  .photo-picker { display: flex; align-items: center; gap: 12px; }
+  .photo-picker input[type="file"] { display: none; }
+  .btn-photo { background: var(--surface2); border: 1px dashed var(--border); border-radius: 12px; padding: 12px 16px; font-size: 13px; font-weight: 600; font-family: 'Syne', sans-serif; color: var(--muted); cursor: pointer; touch-action: manipulation; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .btn-photo:active { border-color: var(--accent); color: var(--accent); }
+  .photo-preview { width: 52px; height: 52px; border-radius: 10px; object-fit: cover; border: 1px solid var(--border); display: none; flex-shrink: 0; }
+  .photo-filename { font-size: 11px; font-family: 'DM Mono', monospace; color: var(--accent); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* Observation card with photo */
+  .obs-card-photo { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border); flex-shrink: 0; }
 </style>
 </head>
 <body>
@@ -130,9 +144,8 @@
     </div>
     <p style="font-size:14px;color:var(--muted);line-height:1.7;font-family:'DM Mono',monospace;max-width:280px;">Hold the mic button while you speak, release when done. The app reads each prompt aloud.</p>
 
-    <!-- Step 1: Grant mic -->
+    <!-- Grant mic -->
     <div style="width:100%;display:flex;flex-direction:column;gap:10px;" id="perm-section">
-      <div style="font-size:10px;font-family:'DM Mono',monospace;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;">Step 1 of 2</div>
       <button class="perm-btn" id="perm-btn" onclick="requestMicPermission()">
         Allow Microphone Access
       </button>
@@ -168,7 +181,7 @@
       <div class="transcript-text" id="transcript-text" contenteditable="true" data-placeholder="Hold the mic and speak, or type here..."></div>
     </div>
     <div class="status-msg" id="field-status"></div>
-    <button class="btn-mic" id="btn-mic"
+    <button class="btn-clear-field" onclick="clearField()">✕ Clear answer</button>
       onmousedown="handleMicDown(event,'field')" onmouseup="handleMicUp(event,'field')" onmouseleave="handleMicUp(event,'field')"
       ontouchstart="handleMicDown(event,'field')" ontouchend="handleMicUp(event,'field')" ontouchcancel="handleMicUp(event,'field')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -223,6 +236,19 @@
       </svg>
       <span id="obs-mic-label">Hold to Record</span>
     </button>
+
+    <!-- Photo picker -->
+    <div class="photo-picker">
+      <input type="file" id="obs-photo-input" accept="image/*" onchange="handlePhotoSelected(event)">
+      <button class="btn-photo" onclick="document.getElementById('obs-photo-input').click()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        Attach Photo
+      </button>
+      <img id="obs-photo-preview" class="photo-preview" alt="preview">
+      <span class="photo-filename" id="obs-photo-filename"></span>
+      <button id="obs-photo-clear" style="display:none;background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:4px;" onclick="clearObsPhoto()">×</button>
+    </div>
+
     <div class="btn-row">
       <button class="btn-secondary" onclick="closeObsModal()">Cancel</button>
       <button class="btn-next" onclick="saveObservation()">Add →</button>
@@ -248,20 +274,35 @@
 <div class="screen" id="screen-export">
   <div class="header">
     <div class="header-top"><span class="app-label">Field Report</span></div>
-    <h1>Export Data</h1>
+    <h1>Exporting…</h1>
   </div>
-  <div style="flex:1;padding:24px;display:flex;flex-direction:column;gap:16px;overflow-y:auto;">
-    <p style="font-size:13px;color:var(--muted);font-family:'DM Mono',monospace;line-height:1.7;">Copy the text below and paste it into an email or Notes app to save your report.</p>
-    <textarea class="export-text-area" id="export-text-area" readonly></textarea>
-    <button class="btn-export" onclick="copyToClipboard()">Copy to Clipboard</button>
-    <div class="status-msg" id="copy-status"></div>
-    <p style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;text-align:center;line-height:1.6;">Paste into an email to yourself, then open on your computer to generate the formatted Word doc.</p>
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 32px;gap:20px;text-align:center;">
+    <div id="export-spinner" style="width:56px;height:56px;border-radius:50%;border:3px solid var(--border);border-top-color:var(--accent);animation:spin 0.8s linear infinite;"></div>
+    <p style="font-size:14px;font-family:'DM Mono',monospace;color:var(--muted);" id="export-status-msg">Building zip file…</p>
   </div>
   <div style="padding:20px 24px 36px;border-top:1px solid var(--border);">
     <button class="btn-restart" onclick="confirmRestart()">Start New Report</button>
   </div>
 </div>
 
+<!-- SUCCESS -->
+<div class="screen" id="screen-success">
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 32px;gap:20px;text-align:center;">
+    <div style="width:72px;height:72px;border-radius:50%;background:var(--accent-dim);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:32px;animation:pop 0.4s cubic-bezier(0.34,1.56,0.64,1);">✓</div>
+    <h2 style="font-size:24px;font-weight:800;">Report Ready</h2>
+    <p style="font-size:13px;font-family:'DM Mono',monospace;color:var(--muted);line-height:1.7;max-width:280px;" id="success-detail">Your zip file contains the JSON report and all attached photos. Save it to Files or share via AirDrop to bring it to your computer.</p>
+  </div>
+  <div style="padding:20px 24px 36px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:12px;">
+    <button class="btn-export" onclick="confirmRestart()">Start New Report</button>
+  </div>
+</div>
+
+<style>
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pop { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
 const fields = [
   { key: 'project_location',   label: 'Project Location',   question: 'Where is this project located?',           hint: 'e.g. address, building name, or area' },
@@ -273,7 +314,8 @@ const fields = [
 
 let currentField = 0;
 let reportData = {};
-let observations = [];
+let observations = []; // each: { description, photoFilename, photoDataUrl }
+let currentObsPhoto = null; // { filename, dataUrl }
 let recog = null;
 let recogContext = null;
 let isListening = false;
@@ -658,10 +700,24 @@ function goBackToFields() {
   showScreen('screen-field');
 }
 
+// ── FIELD CLEAR ──────────────────────────────────────────────
+function clearField() {
+  const el = document.getElementById('transcript-text');
+  el.textContent = '';
+  committedText.field = '';
+  delete reportData[fields[currentField].key];
+  setStatus('field-status', '', '');
+}
+
 // ── OBSERVATIONS ─────────────────────────────────────────────
 function openObsModal() {
   document.getElementById('obs-transcript-text').textContent = '';
   committedText.obs = '';
+  currentObsPhoto = null;
+  document.getElementById('obs-photo-preview').style.display = 'none';
+  document.getElementById('obs-photo-filename').textContent = '';
+  document.getElementById('obs-photo-clear').style.display = 'none';
+  document.getElementById('obs-photo-input').value = '';
   setStatus('obs-status', '', '');
   document.getElementById('obs-modal').classList.add('active');
   setTimeout(() => speak('Describe what you observed.'), 300);
@@ -673,15 +729,55 @@ function closeObsModal() {
 function saveObservation() {
   const text = document.getElementById('obs-transcript-text').textContent.trim();
   if (!text) { setStatus('obs-status', 'Please add a description first.', 'error'); return; }
-  observations.push(text); closeObsModal(); renderObservations();
+  observations.push({
+    description: text,
+    photoFilename: currentObsPhoto ? currentObsPhoto.filename : null,
+    photoDataUrl: currentObsPhoto ? currentObsPhoto.dataUrl : null,
+  });
+  closeObsModal();
+  renderObservations();
 }
+
+function handlePhotoSelected(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    currentObsPhoto = { filename: file.name, dataUrl: ev.target.result };
+    const preview = document.getElementById('obs-photo-preview');
+    preview.src = ev.target.result;
+    preview.style.display = 'block';
+    document.getElementById('obs-photo-filename').textContent = file.name;
+    document.getElementById('obs-photo-clear').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearObsPhoto() {
+  currentObsPhoto = null;
+  document.getElementById('obs-photo-preview').style.display = 'none';
+  document.getElementById('obs-photo-filename').textContent = '';
+  document.getElementById('obs-photo-clear').style.display = 'none';
+  document.getElementById('obs-photo-input').value = '';
+}
+
 function renderObservations() {
   const list = document.getElementById('obs-list');
-  if (!observations.length) { list.innerHTML = '<div class="obs-empty">No observations yet.<br>Tap below to add one.</div>'; return; }
+  if (!observations.length) {
+    list.innerHTML = '<div class="obs-empty">No observations yet.<br>Tap below to add one.</div>';
+    return;
+  }
   list.innerHTML = observations.map((obs, i) => `
     <div class="obs-card">
       <span class="obs-num">OBS ${i+1}</span>
-      <span class="obs-text">${obs}</span>
+      <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
+        <span class="obs-text">${obs.description}</span>
+        ${obs.photoFilename ? `
+          <div style="display:flex;align-items:center;gap:8px;">
+            ${obs.photoDataUrl ? `<img src="${obs.photoDataUrl}" class="obs-card-photo" alt="photo">` : ''}
+            <span style="font-size:11px;font-family:'DM Mono',monospace;color:var(--accent);">${obs.photoFilename}</span>
+          </div>` : ''}
+      </div>
       <button class="obs-delete" onclick="deleteObs(${i})">×</button>
     </div>`).join('');
 }
@@ -698,7 +794,14 @@ function buildReviewScreen() {
   if (observations.length) {
     html += `<div><div class="review-section-label">Observations (${observations.length})</div>`;
     observations.forEach((obs, i) => {
-      html += `<div class="review-field"><div class="review-field-label">Observation ${i+1}</div><div class="review-field-value">${obs}</div></div>`;
+      html += `<div class="review-field">
+        <div class="review-field-label">Observation ${i+1}</div>
+        <div class="review-field-value">${obs.description}</div>
+        ${obs.photoFilename ? `<div style="display:flex;align-items:center;gap:8px;margin-top:6px;">
+          ${obs.photoDataUrl ? `<img src="${obs.photoDataUrl}" style="width:40px;height:40px;border-radius:6px;object-fit:cover;border:1px solid var(--border);">` : ''}
+          <span style="font-size:11px;font-family:'DM Mono',monospace;color:var(--accent);">${obs.photoFilename}</span>
+        </div>` : ''}
+      </div>`;
     });
     html += '</div>';
   }
@@ -706,26 +809,62 @@ function buildReviewScreen() {
 }
 
 // ── EXPORT ───────────────────────────────────────────────────
-function exportReport() {
-  const report = {
-    exported_at: new Date().toISOString(),
-    fields: reportData,
-    observations: observations.map((text, i) => ({ id: i+1, description: text, photo_ref: `Photo ${i+1}` }))
-  };
-  document.getElementById('export-text-area').value = JSON.stringify(report, null, 2);
+async function exportReport() {
   showScreen('screen-export');
-}
-function copyToClipboard() {
-  const text = document.getElementById('export-text-area').value;
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(() => setStatus('copy-status', '✓ Copied!', 'success')).catch(fallbackCopy);
-  } else { fallbackCopy(); }
-}
-function fallbackCopy() {
-  const ta = document.getElementById('export-text-area');
-  ta.select(); ta.setSelectionRange(0, 99999);
-  try { document.execCommand('copy'); setStatus('copy-status', '✓ Copied!', 'success'); }
-  catch(e) { setStatus('copy-status', 'Select all text above and copy manually.', 'error'); }
+  const statusMsg = document.getElementById('export-status-msg');
+
+  try {
+    statusMsg.textContent = 'Building report…';
+    const timestamp = new Date().toISOString().split('T')[0];
+
+    const report = {
+      exported_at: new Date().toISOString(),
+      fields: reportData,
+      observations: observations.map((obs, i) => ({
+        id: i + 1,
+        description: obs.description,
+        photo_filename: obs.photoFilename || null,
+        photo_ref: `Photo ${i + 1}`
+      }))
+    };
+
+    statusMsg.textContent = 'Adding photos…';
+    const zip = new JSZip();
+    zip.file('report.json', JSON.stringify(report, null, 2));
+
+    // Add each photo that has a dataUrl
+    for (const obs of observations) {
+      if (obs.photoDataUrl && obs.photoFilename) {
+        // Strip base64 header e.g. "data:image/jpeg;base64,"
+        const base64 = obs.photoDataUrl.split(',')[1];
+        zip.file(`photos/${obs.photoFilename}`, base64, { base64: true });
+      }
+    }
+
+    statusMsg.textContent = 'Compressing…';
+    const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
+
+    statusMsg.textContent = 'Preparing download…';
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `field-report_${timestamp}.zip`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+
+    // Count photos attached
+    const photoCount = observations.filter(o => o.photoFilename).length;
+    document.getElementById('success-detail').textContent =
+      `Zip contains report.json and ${photoCount} photo${photoCount !== 1 ? 's' : ''} in a photos/ folder. Save to Files or share via AirDrop to bring it to your computer.`;
+
+    showScreen('screen-success');
+
+  } catch(err) {
+    statusMsg.textContent = `Error: ${err.message}. Try again.`;
+    document.getElementById('export-spinner').style.display = 'none';
+  }
 }
 function confirmRestart() {
   if (confirm('Start a new report? Current data will be cleared.')) showScreen('screen-welcome');
