@@ -631,15 +631,14 @@ function stopAudioLevelMonitor() {
 function onMicReady(ctx, el) {
   if (micReadyFired) return;
   micReadyFired = true;
-  // Stop level monitoring — we don't need it anymore
-  if (audioLevelRAF) { cancelAnimationFrame(audioLevelRAF); audioLevelRAF = null; }
+  // Fully close the AudioContext immediately so iOS releases the audio session
+  stopAudioLevelMonitor();
   el.btn.classList.remove('waiting');
   el.btn.classList.add('listening');
   el.label.textContent = 'Release to Stop';
   el.indicator.classList.add('active');
   el.box.classList.add('listening');
   setStatus(el.statusId, '🎙 Listening…', 'success');
-  playBeep();
 }
 
 function stopRecording(ctx) {
@@ -658,20 +657,6 @@ function resetMicUI(ctx) {
   el.box.classList.remove('listening', 'ready');
   const s = document.getElementById(el.statusId);
   if (!s.classList.contains('error')) { s.textContent = ''; s.className = 'status-msg'; }
-}
-
-function playBeep() {
-  try {
-    const ac = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = ac.createOscillator();
-    const gain = ac.createGain();
-    osc.connect(gain); gain.connect(ac.destination);
-    osc.frequency.value = 880;
-    gain.gain.setValueAtTime(0.15, ac.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.12);
-    osc.start(ac.currentTime);
-    osc.stop(ac.currentTime + 0.12);
-  } catch(e) {}
 }
 
 // ── FIELD NAV ────────────────────────────────────────────────
