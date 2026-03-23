@@ -266,9 +266,86 @@ const FIELDS=[
 ];
 
 let curField=0,reportData={},observations=[],curObsPhoto=null;
-let recog=null,recogCtx=null,isListening=false,isWaiting=false,releasedEarly=false;
+let recog=null,recogCtx=null;
 let committed={fld:'',obs:''};
-let micReadyTimer=null;
+let capturing=false;       // true while button is held
+let captureBuffer='';      // text accumulated during this hold
+let warmSession=false;     // true when background recognition is running
+
+// ── MIC HANDLERS ─────────────────────────────────────────────
+function micDown(e,ctx){
+  e.preventDefault();
+  if(capturing)return;
+  capturing=true;
+  captureBuffer='';
+  const el=getEl(ctx);
+  el.btn.classList.remove('waiting');el.btn.classList.add('listening');
+  el.lbl.textContent='Release to Stop';
+  el.wave.classList.add('on');el.box.classList.add('listening');
+  setStatus(el.sid,'🎙 Listening…','ok');
+  // If warm session isn't running yet, start it now
+  if(!warmSession) startWarmSession(ctx,el);
+}
+function micUp(e,ctx){
+  e.preventDefault();
+  if(!capturing)return;
+  capturing=false;
+  const el=getEl(ctx);
+  el.btn.classList.remove('listening');el.lbl.textContent='Hold to Record';
+  el.wave.classList.remove('on');el.box.classList.remove('listening');
+  setStatus(el.sid,'','');
+}
+
+function getEl(ctx){
+  return ctx==='fld'
+    ?{btn:document.getElementById('fld-mic'),lbl:document.getElementById('fld-mic-lbl'),wave:document.getElementById('fld-wave'),box:document.getElementById('fld-tx-box'),tx:document.getElementById('fld-tx'),sid:'fld-status'}
+    :{btn:document.getElementById('obs-mic'),lbl:document.getElementById('obs-mic-lbl'),wave:document.getElementById('obs-wave'),box:document.getElementById('obs-tx-box'),tx:document.getElementById('obs-tx'),sid:'obs-status'};
+}
+
+// ── WARM SESSION ─────────────────────────────────────────────
+// Starts recognition and keeps it running in the background.
+// Text is only appended to the transcript while capturing=true.
+function startWarmSession(ctx,el){
+  const API=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!API||warmSession)return;
+  window.speechSynthesis&&window.speechSynthesis.cancel();
+  warmSession=true;
+  function launch(){
+    recog=new API();
+    recogCtx=ctx;
+    recog.continuous=true;
+    recog.interimResults=true;
+    recog.lang='en-US';
+    recog.maxAlternatives=1;
+    recog.onresult=(e)=>{
+      if(!capturing)return; // ignore anything heard while not holding
+      let txt='';
+      for(let i=0;i<e.results.length;i++) txt+=e.results[i][0].transcript;
+      const base=committed[ctx];
+      el.tx.textContent=base?base+' '+txt:txt;
+    };
+    recog.onerror=(e)=>{
+      if(e.error==='not-allowed'||e.error==='service-not-allowed'){
+        warmSession=false;
+        setStatus(el.sid,'Mic blocked. Tap AA → Website Settings → Microphone: Allow, then reload.','err');
+      }
+      // For no-speech or other errors, just restart silently
+    };
+    recog.onend=()=>{
+      // Auto-restart to keep the session warm, unless we navigated away
+      if(warmSession) setTimeout(launch, 150);
+    };
+    try{ recog.start(); }
+    catch(err){ warmSession=false; }
+  }
+  launch();
+}
+
+function stopWarmSession(){
+  warmSession=false;
+  capturing=false;
+  if(recog){try{recog.stop();}catch(e){}recog=null;}
+}
 
 // Voice
 const PREF=['Samantha (Enhanced)','Samantha','Aaron (Enhanced)','Aaron','Karen (Enhanced)','Karen','Daniel (Enhanced)','Daniel'];
@@ -326,82 +403,26 @@ function renderField(){
   document.getElementById('fld-tx').textContent=ex;
   committed.fld=ex;
   setStatus('fld-status','','');
+  // Start warm session so mic is ready before user touches the button
+  stopWarmSession();
+  setTimeout(()=>startWarmSession('fld',getEl('fld')),100);
 }
 function clearField(){document.getElementById('fld-tx').textContent='';committed.fld='';delete reportData[FIELDS[curField].key];setStatus('fld-status','','');}
 function nextField(){
   const t=document.getElementById('fld-tx').textContent.trim();
   if(t)reportData[FIELDS[curField].key]=t;
+  stopWarmSession();
   curField++;
   if(curField>=FIELDS.length){renderObs();showScreen('screen-obs');setTimeout(()=>speak('Now add your observations. Tap the plus button to begin.'),500);return;}
   renderField();setTimeout(()=>speak(FIELDS[curField].q),300);
 }
-function skipField(){curField++;if(curField>=FIELDS.length){renderObs();showScreen('screen-obs');return;}renderField();setTimeout(()=>speak(FIELDS[curField].q),300);}
-function goBackToFields(){curField=FIELDS.length-1;renderField();showScreen('screen-field');}
-
-// Mic
-function micDown(e,ctx){e.preventDefault();if(isListening||isWaiting)return;beginRec(ctx);}
-function micUp(e,ctx){e.preventDefault();if(isWaiting){releasedEarly=true;return;}if(isListening&&recogCtx===ctx)stopRec(ctx);}
-
-function getEl(ctx){
-  return ctx==='fld'
-    ?{btn:document.getElementById('fld-mic'),lbl:document.getElementById('fld-mic-lbl'),wave:document.getElementById('fld-wave'),box:document.getElementById('fld-tx-box'),tx:document.getElementById('fld-tx'),sid:'fld-status'}
-    :{btn:document.getElementById('obs-mic'),lbl:document.getElementById('obs-mic-lbl'),wave:document.getElementById('obs-wave'),box:document.getElementById('obs-tx-box'),tx:document.getElementById('obs-tx'),sid:'obs-status'};
+function skipField(){
+  stopWarmSession();
+  curField++;
+  if(curField>=FIELDS.length){renderObs();showScreen('screen-obs');return;}
+  renderField();setTimeout(()=>speak(FIELDS[curField].q),300);
 }
-
-function beginRec(ctx){
-  const API=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!API)return;
-  const el=getEl(ctx);
-  committed[ctx]=el.tx.textContent.trim();
-  releasedEarly=false;isWaiting=true;
-  el.btn.classList.add('waiting');el.lbl.textContent='Starting…';
-  setStatus(el.sid,'Getting ready…','warn');
-  window.speechSynthesis&&window.speechSynthesis.cancel();
-  recog=new API();recogCtx=ctx;recog.continuous=true;recog.interimResults=true;recog.lang='en-US';recog.maxAlternatives=1;
-  recog.onstart=()=>{
-    isWaiting=false;
-    if(releasedEarly){
-      try{recog.stop();}catch(e){}
-      el.btn.classList.remove('waiting');el.lbl.textContent='Hold to Record';
-      setStatus(el.sid,'','');return;
-    }
-    isListening=true;
-    // Short delay to let iOS mic fully stabilize before signalling ready
-    micReadyTimer=setTimeout(()=>onMicReady(ctx,el),350);
-  };
-  recog.onresult=(e)=>{
-    // Also fire ready immediately if results arrive before the timer
-    onMicReady(ctx,el);
-    let txt='';for(let i=0;i<e.results.length;i++)txt+=e.results[i][0].transcript;
-    const base=committed[ctx];el.tx.textContent=base?base+' '+txt:txt;
-  };
-  recog.onerror=(e)=>{
-    isWaiting=false;clearTimeout(micReadyTimer);
-    let msg='';
-    if(e.error==='not-allowed'||e.error==='service-not-allowed')msg='Mic blocked. Tap AA → Website Settings → Microphone: Allow, then reload.';
-    else if(e.error==='network')msg='Network error.';
-    if(msg)setStatus(el.sid,msg,'err');
-    resetMicUI(ctx);
-  };
-  recog.onend=()=>{isWaiting=false;clearTimeout(micReadyTimer);committed[ctx]=el.tx.textContent.trim();resetMicUI(ctx);};
-  try{recog.start();}catch(err){isWaiting=false;clearTimeout(micReadyTimer);setStatus(el.sid,'Could not start. Try again.','err');resetMicUI(ctx);recog=null;}
-}
-function stopRec(ctx){if(recog){try{recog.stop();}catch(e){}recog=null;}}
-function resetMicUI(ctx){
-  isListening=false;recogCtx=null;clearTimeout(micReadyTimer);
-  const el=getEl(ctx);
-  el.btn.classList.remove('waiting','listening');el.lbl.textContent='Hold to Record';
-  el.wave.classList.remove('on');el.box.classList.remove('waiting','listening');
-  const s=document.getElementById(el.sid);if(!s.classList.contains('err')){s.textContent='';s.className='status';}
-}
-function onMicReady(ctx,el){
-  if(!isListening)return;
-  // Clear the timer so it doesn't fire twice
-  clearTimeout(micReadyTimer);
-  el.btn.classList.remove('waiting');el.btn.classList.add('listening');
-  el.lbl.textContent='Release to Stop';el.wave.classList.add('on');el.box.classList.add('listening');
-  setStatus(el.sid,'🎙 Listening…','ok');
-}
+function goBackToFields(){stopWarmSession();curField=FIELDS.length-1;renderField();showScreen('screen-field');}
 
 // Observations
 function openObsModal(){
@@ -413,8 +434,14 @@ function openObsModal(){
   setStatus('obs-status','','');
   document.getElementById('obs-modal').classList.add('active');
   setTimeout(()=>speak('Describe what you observed.'),300);
+  // Start warm session for obs
+  stopWarmSession();
+  setTimeout(()=>startWarmSession('obs',getEl('obs')),100);
 }
-function closeObsModal(){stopRec('obs');document.getElementById('obs-modal').classList.remove('active');}
+function closeObsModal(){
+  stopWarmSession();
+  document.getElementById('obs-modal').classList.remove('active');
+}
 function saveObs(){
   const text=document.getElementById('obs-tx').textContent.trim();
   if(!text){setStatus('obs-status','Please add a description first.','err');return;}
