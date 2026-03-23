@@ -6,129 +6,99 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Field Report">
-<!-- v6 -->
+<!-- v7 -->
 <title>Field Report</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0d0f0e; --surface: #161a18; --surface2: #1e2420;
-    --border: #2a3230; --accent: #4eff91; --accent-dim: #1a4a30;
-    --text: #e8ede9; --muted: #6b7a70; --danger: #ff5a5a;
-    --warning: #ffcc44;
+    --bg:#0d0f0e; --surface:#161a18; --surface2:#1e2420;
+    --border:#2a3230; --accent:#4eff91; --accent-dim:#1a4a30;
+    --text:#e8ede9; --muted:#6b7a70; --danger:#ff5a5a; --warning:#ffcc44;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-  body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; min-height: 100vh; min-height: 100dvh; overflow-x: hidden; }
-  .screen { display: none; flex-direction: column; min-height: 100vh; min-height: 100dvh; }
-  .screen.active { display: flex; }
-
-  .header { padding: 56px 24px 20px; border-bottom: 1px solid var(--border); background: var(--surface); position: sticky; top: 0; z-index: 10; }
-  .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
-  .app-label { font-size: 10px; font-family: 'DM Mono', monospace; color: var(--accent); letter-spacing: 0.15em; text-transform: uppercase; }
-  .header h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
-  .progress-bar { height: 2px; background: var(--border); border-radius: 2px; margin-top: 14px; overflow: hidden; }
-  .progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.4s cubic-bezier(0.4,0,0.2,1); }
-  .step-counter { font-size: 11px; font-family: 'DM Mono', monospace; color: var(--muted); }
-
-  .field-body { flex: 1; display: flex; flex-direction: column; padding: 32px 24px 24px; gap: 24px; overflow-y: auto; }
-  .field-question { font-size: 28px; font-weight: 700; line-height: 1.15; letter-spacing: -0.02em; }
-  .field-hint { font-size: 13px; color: var(--muted); font-family: 'DM Mono', monospace; margin-top: 6px; }
-
-  .transcript-box { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 18px; min-height: 100px; font-size: 16px; line-height: 1.6; position: relative; transition: border-color 0.2s; }
-  .transcript-box.listening { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(78,255,145,0.08); }
-  .transcript-box.ready { border-color: var(--warning); box-shadow: 0 0 0 3px rgba(255,204,68,0.1); }
-  .transcript-text { outline: none; min-height: 60px; color: var(--text); }
-  [contenteditable]:empty:before { content: attr(data-placeholder); color: var(--muted); font-style: italic; pointer-events: none; }
-
-  .listening-indicator { display: none; align-items: center; gap: 4px; position: absolute; top: 14px; right: 14px; }
-  .listening-indicator.active { display: flex; }
-  .listening-indicator span { display: block; width: 4px; border-radius: 2px; background: var(--accent); animation: wave 0.8s ease-in-out infinite; }
-  .listening-indicator span:nth-child(1) { height: 8px; animation-delay: 0s; }
-  .listening-indicator span:nth-child(2) { height: 14px; animation-delay: 0.1s; }
-  .listening-indicator span:nth-child(3) { height: 10px; animation-delay: 0.2s; }
-  .listening-indicator span:nth-child(4) { height: 16px; animation-delay: 0.15s; }
-  .listening-indicator span:nth-child(5) { height: 6px; animation-delay: 0.05s; }
-  @keyframes wave { 0%,100% { transform: scaleY(0.5); opacity: 0.5; } 50% { transform: scaleY(1); opacity: 1; } }
-
-  .btn-mic {
-    background: var(--accent); color: #000; border: none; border-radius: 100px;
-    padding: 20px 32px; font-size: 15px; font-weight: 700; font-family: 'Syne', sans-serif;
-    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
-    box-shadow: 0 4px 24px rgba(78,255,145,0.25); width: 100%; -webkit-appearance: none;
-    touch-action: none; user-select: none; -webkit-user-select: none;
-    transition: background 0.15s, box-shadow 0.15s;
-  }
-  .btn-mic.waiting {
-    background: var(--warning); box-shadow: 0 4px 24px rgba(255,204,68,0.3); color: #000;
-  }
-  .btn-mic.listening {
-    background: var(--danger); box-shadow: 0 4px 24px rgba(255,90,90,0.3); color: #fff;
-  }
-  .btn-mic svg { width: 20px; height: 20px; flex-shrink: 0; }
-
-  .btn-row { display: flex; gap: 12px; }
-  .btn-secondary { flex: 1; background: var(--surface2); color: var(--text); border: 1px solid var(--border); border-radius: 100px; padding: 16px; font-size: 14px; font-weight: 600; font-family: 'Syne', sans-serif; cursor: pointer; text-align: center; -webkit-appearance: none; touch-action: manipulation; }
-  .btn-secondary:active { background: var(--border); }
-  .btn-next { flex: 2; background: var(--text); color: #000; border: none; border-radius: 100px; padding: 16px; font-size: 15px; font-weight: 700; font-family: 'Syne', sans-serif; cursor: pointer; -webkit-appearance: none; touch-action: manipulation; }
-  .btn-next:active { opacity: 0.8; }
-
-  .obs-list { display: flex; flex-direction: column; gap: 12px; }
-  .obs-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; display: flex; gap: 14px; align-items: flex-start; animation: slideIn 0.3s ease; }
-  @keyframes slideIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-  .obs-num { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--accent); background: var(--accent-dim); border-radius: 6px; padding: 3px 7px; flex-shrink: 0; margin-top: 2px; }
-  .obs-text { font-size: 14px; line-height: 1.55; flex: 1; }
-  .obs-delete { background: none; border: none; color: var(--muted); cursor: pointer; padding: 2px; font-size: 18px; line-height: 1; flex-shrink: 0; touch-action: manipulation; }
-  .obs-empty { text-align: center; color: var(--muted); font-size: 14px; font-family: 'DM Mono', monospace; padding: 32px 0; }
-  .obs-add-btn { background: var(--surface2); border: 1px dashed var(--border); border-radius: 14px; padding: 16px; color: var(--accent); font-size: 14px; font-weight: 600; font-family: 'Syne', sans-serif; cursor: pointer; text-align: center; width: 100%; -webkit-appearance: none; touch-action: manipulation; }
-  .obs-add-btn:active { background: var(--accent-dim); }
-
-  .review-body { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 20px; }
-  .review-section-label { font-size: 10px; font-family: 'DM Mono', monospace; color: var(--accent); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 10px; }
-  .review-field { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
-  .review-field-label { font-size: 10px; font-family: 'DM Mono', monospace; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
-  .review-field-value { font-size: 15px; line-height: 1.5; }
-
-  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; align-items: flex-end; }
-  .modal-overlay.active { display: flex; }
-  .modal-sheet { background: var(--surface); border-radius: 24px 24px 0 0; padding: 24px 24px 44px; width: 100%; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 16px; animation: sheetUp 0.3s cubic-bezier(0.4,0,0.2,1); }
-  @keyframes sheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-  .modal-title { font-size: 18px; font-weight: 700; }
-
-  .status-msg { font-size: 12px; font-family: 'DM Mono', monospace; color: var(--muted); text-align: center; min-height: 18px; line-height: 1.5; }
-  .status-msg.error { color: var(--danger); }
-  .status-msg.success { color: var(--accent); }
-  .status-msg.warning { color: var(--warning); }
-
-  .obs-screen-body { flex: 1; padding: 24px; display: flex; flex-direction: column; gap: 20px; overflow-y: auto; }
-  .obs-footer { padding: 20px 24px 36px; border-top: 1px solid var(--border); }
-  .btn-export { background: var(--accent); color: #000; border: none; border-radius: 100px; padding: 18px; font-size: 16px; font-weight: 800; font-family: 'Syne', sans-serif; cursor: pointer; text-align: center; box-shadow: 0 4px 24px rgba(78,255,145,0.25); width: 100%; -webkit-appearance: none; touch-action: manipulation; }
-  .btn-export:active { opacity: 0.85; }
-  .btn-restart { background: none; border: none; color: var(--muted); font-size: 14px; font-family: 'Syne', sans-serif; cursor: pointer; text-align: center; padding: 8px; width: 100%; touch-action: manipulation; }
-
-  /* Permission screen */
-  .perm-btn { background: var(--accent); color: #000; border: none; border-radius: 100px; padding: 18px 32px; font-size: 16px; font-weight: 800; font-family: 'Syne', sans-serif; cursor: pointer; width: 100%; touch-action: manipulation; -webkit-appearance: none; box-shadow: 0 4px 24px rgba(78,255,145,0.25); }
-  .perm-btn:active { opacity: 0.85; }
-  .perm-btn.granted { background: var(--surface2); color: var(--accent); box-shadow: none; border: 1px solid var(--accent); }
-
-  /* Clear field button */
-  .btn-clear-field { background: none; border: 1px solid var(--border); border-radius: 100px; padding: 10px 18px; font-size: 12px; font-family: 'DM Mono', monospace; color: var(--muted); cursor: pointer; touch-action: manipulation; align-self: flex-start; }
-  .btn-clear-field:active { background: var(--surface2); color: var(--danger); border-color: var(--danger); }
-
-  /* Photo picker in observation modal */
-  .photo-picker { display: flex; align-items: center; gap: 12px; }
-  .photo-picker input[type="file"] { display: none; }
-  .btn-photo { background: var(--surface2); border: 1px dashed var(--border); border-radius: 12px; padding: 12px 16px; font-size: 13px; font-weight: 600; font-family: 'Syne', sans-serif; color: var(--muted); cursor: pointer; touch-action: manipulation; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-  .btn-photo:active { border-color: var(--accent); color: var(--accent); }
-  .photo-preview { width: 52px; height: 52px; border-radius: 10px; object-fit: cover; border: 1px solid var(--border); display: none; flex-shrink: 0; }
-  .photo-filename { font-size: 11px; font-family: 'DM Mono', monospace; color: var(--accent); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-  /* Observation card with photo */
-  .obs-card-photo { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border); flex-shrink: 0; }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;min-height:100dvh;overflow-x:hidden;}
+  .screen{display:none;flex-direction:column;min-height:100vh;min-height:100dvh;}
+  .screen.active{display:flex;}
+  .hdr{padding:56px 24px 20px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:10;}
+  .hdr-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
+  .app-lbl{font-size:10px;font-family:'DM Mono',monospace;color:var(--accent);letter-spacing:.15em;text-transform:uppercase;}
+  .hdr h1{font-size:22px;font-weight:800;letter-spacing:-.02em;}
+  .prog-bar{height:2px;background:var(--border);border-radius:2px;margin-top:14px;overflow:hidden;}
+  .prog-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .4s cubic-bezier(.4,0,.2,1);}
+  .step-ctr{font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);}
+  .fld-body{flex:1;display:flex;flex-direction:column;padding:32px 24px 24px;gap:24px;overflow-y:auto;}
+  .fld-q{font-size:28px;font-weight:700;line-height:1.15;letter-spacing:-.02em;}
+  .fld-hint{font-size:13px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:6px;}
+  .tx-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;min-height:100px;font-size:16px;line-height:1.6;position:relative;transition:border-color .2s;}
+  .tx-box.waiting{border-color:var(--warning);box-shadow:0 0 0 3px rgba(255,204,68,.1);}
+  .tx-box.listening{border-color:var(--accent);box-shadow:0 0 0 3px rgba(78,255,145,.08);}
+  .tx-text{outline:none;min-height:60px;color:var(--text);}
+  [contenteditable]:empty:before{content:attr(data-placeholder);color:var(--muted);font-style:italic;pointer-events:none;}
+  .wave{display:none;align-items:center;gap:4px;position:absolute;top:14px;right:14px;}
+  .wave.on{display:flex;}
+  .wave span{display:block;width:4px;border-radius:2px;background:var(--accent);animation:wv .8s ease-in-out infinite;}
+  .wave span:nth-child(1){height:8px;animation-delay:0s;}
+  .wave span:nth-child(2){height:14px;animation-delay:.1s;}
+  .wave span:nth-child(3){height:10px;animation-delay:.2s;}
+  .wave span:nth-child(4){height:16px;animation-delay:.15s;}
+  .wave span:nth-child(5){height:6px;animation-delay:.05s;}
+  @keyframes wv{0%,100%{transform:scaleY(.5);opacity:.5;}50%{transform:scaleY(1);opacity:1;}}
+  .btn-mic{background:var(--accent);color:#000;border:none;border-radius:100px;padding:20px 32px;font-size:15px;font-weight:700;font-family:'Syne',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 4px 24px rgba(78,255,145,.25);width:100%;-webkit-appearance:none;touch-action:none;user-select:none;-webkit-user-select:none;transition:background .15s,box-shadow .15s;}
+  .btn-mic.waiting{background:var(--warning);box-shadow:0 4px 24px rgba(255,204,68,.3);color:#000;}
+  .btn-mic.listening{background:var(--danger);box-shadow:0 4px 24px rgba(255,90,90,.3);color:#fff;}
+  .btn-mic svg{width:20px;height:20px;flex-shrink:0;}
+  .btn-row{display:flex;gap:12px;}
+  .btn-sec{flex:1;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:100px;padding:16px;font-size:14px;font-weight:600;font-family:'Syne',sans-serif;cursor:pointer;text-align:center;-webkit-appearance:none;touch-action:manipulation;}
+  .btn-sec:active{background:var(--border);}
+  .btn-nxt{flex:2;background:var(--text);color:#000;border:none;border-radius:100px;padding:16px;font-size:15px;font-weight:700;font-family:'Syne',sans-serif;cursor:pointer;-webkit-appearance:none;touch-action:manipulation;}
+  .btn-nxt:active{opacity:.8;}
+  .btn-clr{background:none;border:1px solid var(--border);border-radius:100px;padding:10px 18px;font-size:12px;font-family:'DM Mono',monospace;color:var(--muted);cursor:pointer;touch-action:manipulation;align-self:flex-start;}
+  .btn-clr:active{background:var(--surface2);color:var(--danger);border-color:var(--danger);}
+  .btn-exp{background:var(--accent);color:#000;border:none;border-radius:100px;padding:18px;font-size:16px;font-weight:800;font-family:'Syne',sans-serif;cursor:pointer;text-align:center;box-shadow:0 4px 24px rgba(78,255,145,.25);width:100%;-webkit-appearance:none;touch-action:manipulation;}
+  .btn-exp:active{opacity:.85;}
+  .btn-rst{background:none;border:none;color:var(--muted);font-size:14px;font-family:'Syne',sans-serif;cursor:pointer;text-align:center;padding:8px;width:100%;touch-action:manipulation;}
+  .perm-btn{background:var(--accent);color:#000;border:none;border-radius:100px;padding:18px 32px;font-size:16px;font-weight:800;font-family:'Syne',sans-serif;cursor:pointer;width:100%;touch-action:manipulation;-webkit-appearance:none;box-shadow:0 4px 24px rgba(78,255,145,.25);}
+  .perm-btn:active{opacity:.85;}
+  .perm-btn.granted{background:var(--surface2);color:var(--accent);box-shadow:none;border:1px solid var(--accent);}
+  .obs-list{display:flex;flex-direction:column;gap:12px;}
+  .obs-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;display:flex;gap:14px;align-items:flex-start;animation:sldn .3s ease;}
+  @keyframes sldn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+  .obs-num{font-family:'DM Mono',monospace;font-size:11px;color:var(--accent);background:var(--accent-dim);border-radius:6px;padding:3px 7px;flex-shrink:0;margin-top:2px;}
+  .obs-text{font-size:14px;line-height:1.55;flex:1;}
+  .obs-del{background:none;border:none;color:var(--muted);cursor:pointer;padding:2px;font-size:18px;line-height:1;flex-shrink:0;touch-action:manipulation;}
+  .obs-empty{text-align:center;color:var(--muted);font-size:14px;font-family:'DM Mono',monospace;padding:32px 0;}
+  .obs-add{background:var(--surface2);border:1px dashed var(--border);border-radius:14px;padding:16px;color:var(--accent);font-size:14px;font-weight:600;font-family:'Syne',sans-serif;cursor:pointer;text-align:center;width:100%;-webkit-appearance:none;touch-action:manipulation;}
+  .obs-add:active{background:var(--accent-dim);}
+  .obs-card-photo{width:44px;height:44px;border-radius:8px;object-fit:cover;border:1px solid var(--border);}
+  .photo-picker{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+  .photo-picker input[type="file"]{display:none;}
+  .btn-photo{background:var(--surface2);border:1px dashed var(--border);border-radius:12px;padding:12px 16px;font-size:13px;font-weight:600;font-family:'Syne',sans-serif;color:var(--muted);cursor:pointer;touch-action:manipulation;display:flex;align-items:center;gap:8px;flex-shrink:0;}
+  .btn-photo:active{border-color:var(--accent);color:var(--accent);}
+  .photo-prev{width:52px;height:52px;border-radius:10px;object-fit:cover;border:1px solid var(--border);display:none;flex-shrink:0;}
+  .photo-fname{font-size:11px;font-family:'DM Mono',monospace;color:var(--accent);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .rev-body{flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:20px;}
+  .rev-sec-lbl{font-size:10px;font-family:'DM Mono',monospace;color:var(--accent);letter-spacing:.15em;text-transform:uppercase;margin-bottom:10px;}
+  .rev-fld{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:4px;margin-bottom:10px;}
+  .rev-fld-lbl{font-size:10px;font-family:'DM Mono',monospace;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;}
+  .rev-fld-val{font-size:15px;line-height:1.5;}
+  .modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:flex-end;}
+  .modal-ov.active{display:flex;}
+  .modal-sheet{background:var(--surface);border-radius:24px 24px 0 0;padding:24px 24px 44px;width:100%;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:16px;animation:shup .3s cubic-bezier(.4,0,.2,1);}
+  @keyframes shup{from{transform:translateY(100%);}to{transform:translateY(0);}}
+  .modal-title{font-size:18px;font-weight:700;}
+  .status{font-size:12px;font-family:'DM Mono',monospace;color:var(--muted);text-align:center;min-height:18px;line-height:1.5;}
+  .status.err{color:var(--danger);}
+  .status.ok{color:var(--accent);}
+  .status.warn{color:var(--warning);}
+  .obs-footer{padding:20px 24px 36px;border-top:1px solid var(--border);}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  @keyframes pop{from{transform:scale(.5);opacity:0;}to{transform:scale(1);opacity:1;}}
 </style>
 </head>
 <body>
 
-<!-- ── WELCOME / PERMISSION ────────────────────────────────── -->
+<!-- WELCOME -->
 <div class="screen active" id="screen-welcome">
   <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:48px 32px;text-align:center;gap:28px;">
     <div style="width:72px;height:72px;border-radius:20px;background:var(--accent-dim);border:1.5px solid var(--accent);display:flex;align-items:center;justify-content:center;">
@@ -139,727 +109,412 @@
       </svg>
     </div>
     <div>
-      <div style="font-size:10px;font-family:'DM Mono',monospace;color:var(--accent);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:8px;">Field Report Tool</div>
-      <h1 style="font-size:32px;font-weight:800;letter-spacing:-0.03em;line-height:1.1;">Capture your<br>report by voice.</h1>
+      <div style="font-size:10px;font-family:'DM Mono',monospace;color:var(--accent);letter-spacing:.15em;text-transform:uppercase;margin-bottom:8px;">Field Report Tool</div>
+      <h1 style="font-size:32px;font-weight:800;letter-spacing:-.03em;line-height:1.1;">Capture your<br>report by voice.</h1>
     </div>
     <p style="font-size:14px;color:var(--muted);line-height:1.7;font-family:'DM Mono',monospace;max-width:280px;">Hold the mic button while you speak, release when done. The app reads each prompt aloud.</p>
-
-    <!-- Grant mic -->
-    <div style="width:100%;display:flex;flex-direction:column;gap:10px;" id="perm-section">
-      <button class="perm-btn" id="perm-btn" onclick="requestMicPermission()">
-        Allow Microphone Access
-      </button>
-      <div class="status-msg" id="perm-status"></div>
+    <div style="width:100%;display:flex;flex-direction:column;gap:10px;">
+      <button class="perm-btn" id="perm-btn" onclick="requestMicPermission()">Allow Microphone Access</button>
+      <div class="status" id="perm-status"></div>
     </div>
-
-    <!-- Step 2: Start (disabled until permission granted) -->
-    <div style="width:100%;">
-      <button class="btn-next" id="start-btn" style="width:100%;padding:18px;opacity:0.25;pointer-events:none;" onclick="startReport()">
-        Start New Report →
-      </button>
-    </div>
+    <button class="btn-nxt" id="start-btn" style="width:100%;padding:18px;opacity:.25;pointer-events:none;" onclick="startReport()">Start New Report →</button>
   </div>
 </div>
 
-<!-- ── FIELD CAPTURE ───────────────────────────────────────── -->
+<!-- FIELD CAPTURE -->
 <div class="screen" id="screen-field">
-  <div class="header">
-    <div class="header-top">
-      <span class="app-label">Field Report</span>
-      <span class="step-counter" id="step-counter">1 / 5</span>
+  <div class="hdr">
+    <div class="hdr-top">
+      <span class="app-lbl">Field Report</span>
+      <span class="step-ctr" id="step-ctr">1 / 5</span>
     </div>
-    <h1 id="field-name-header">Project Location</h1>
-    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:20%"></div></div>
+    <h1 id="fld-name">Project Location</h1>
+    <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:20%"></div></div>
   </div>
-  <div class="field-body">
+  <div class="fld-body">
     <div>
-      <div class="field-question" id="field-question">Where is this project located?</div>
-      <div class="field-hint" id="field-hint">e.g. address, building name, or area</div>
+      <div class="fld-q" id="fld-q">Where is this project located?</div>
+      <div class="fld-hint" id="fld-hint">e.g. address, building name, or area</div>
     </div>
-    <div class="transcript-box" id="transcript-box">
-      <div class="listening-indicator" id="listening-indicator"><span></span><span></span><span></span><span></span><span></span></div>
-      <div class="transcript-text" id="transcript-text" contenteditable="true" data-placeholder="Hold the mic and speak, or type here..."></div>
+    <div class="tx-box" id="fld-tx-box">
+      <div class="wave" id="fld-wave"><span></span><span></span><span></span><span></span><span></span></div>
+      <div class="tx-text" id="fld-tx" contenteditable="true" data-placeholder="Hold the mic and speak, or type here..."></div>
     </div>
-    <div class="status-msg" id="field-status"></div>
-    <button class="btn-clear-field" onclick="clearField()">✕ Clear answer</button>
-    <button class="btn-mic" id="btn-mic"
-      onmousedown="handleMicDown(event,'field')" onmouseup="handleMicUp(event,'field')" onmouseleave="handleMicUp(event,'field')"
-      ontouchstart="handleMicDown(event,'field')" ontouchend="handleMicUp(event,'field')" ontouchcancel="handleMicUp(event,'field')">
+    <div class="status" id="fld-status"></div>
+    <button class="btn-clr" onclick="clearField()">✕ Clear answer</button>
+    <button class="btn-mic" id="fld-mic"
+      onmousedown="micDown(event,'fld')" onmouseup="micUp(event,'fld')" onmouseleave="micUp(event,'fld')"
+      ontouchstart="micDown(event,'fld')" ontouchend="micUp(event,'fld')" ontouchcancel="micUp(event,'fld')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
         <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
         <line x1="12" y1="19" x2="12" y2="22"/>
       </svg>
-      <span id="btn-mic-label">Hold to Record</span>
+      <span id="fld-mic-lbl">Hold to Record</span>
     </button>
     <div class="btn-row">
-      <button class="btn-secondary" onclick="skipField()">Skip</button>
-      <button class="btn-next" onclick="nextField()">Next →</button>
+      <button class="btn-sec" onclick="skipField()">Skip</button>
+      <button class="btn-nxt" onclick="nextField()">Next →</button>
     </div>
   </div>
 </div>
 
-<!-- ── OBSERVATIONS ────────────────────────────────────────── -->
-<div class="screen" id="screen-observations">
-  <div class="header">
-    <div class="header-top"><span class="app-label">Field Report</span></div>
+<!-- OBSERVATIONS -->
+<div class="screen" id="screen-obs">
+  <div class="hdr">
+    <div class="hdr-top"><span class="app-lbl">Field Report</span></div>
     <h1>Observations</h1>
   </div>
-  <div class="obs-screen-body">
+  <div style="flex:1;padding:24px;display:flex;flex-direction:column;gap:20px;overflow-y:auto;">
     <div style="font-size:13px;color:var(--muted);font-family:'DM Mono',monospace;">Add each item you observed. Each will be numbered and referenced in the final report.</div>
     <div class="obs-list" id="obs-list"><div class="obs-empty">No observations yet.<br>Tap below to add one.</div></div>
-    <button class="obs-add-btn" onclick="openObsModal()">+ Add Observation</button>
+    <button class="obs-add" onclick="openObsModal()">+ Add Observation</button>
   </div>
   <div class="obs-footer">
     <div class="btn-row">
-      <button class="btn-secondary" onclick="goBackToFields()">← Back</button>
-      <button class="btn-next" onclick="showScreen('screen-review')">Review →</button>
+      <button class="btn-sec" onclick="goBackToFields()">← Back</button>
+      <button class="btn-nxt" onclick="showScreen('screen-review')">Review →</button>
     </div>
   </div>
 </div>
 
-<!-- ── OBSERVATION MODAL ───────────────────────────────────── -->
-<div class="modal-overlay" id="obs-modal">
+<!-- OBSERVATION MODAL -->
+<div class="modal-ov" id="obs-modal">
   <div class="modal-sheet">
     <div class="modal-title">New Observation</div>
-    <div class="transcript-box" id="obs-transcript-box">
-      <div class="listening-indicator" id="obs-listening-indicator"><span></span><span></span><span></span><span></span><span></span></div>
-      <div class="transcript-text" id="obs-transcript-text" contenteditable="true" data-placeholder="Hold the mic and describe what you observed..."></div>
+    <div class="tx-box" id="obs-tx-box">
+      <div class="wave" id="obs-wave"><span></span><span></span><span></span><span></span><span></span></div>
+      <div class="tx-text" id="obs-tx" contenteditable="true" data-placeholder="Hold the mic and describe what you observed..."></div>
     </div>
-    <div class="status-msg" id="obs-status"></div>
-    <button class="btn-mic" id="obs-btn-mic"
-      onmousedown="handleMicDown(event,'obs')" onmouseup="handleMicUp(event,'obs')" onmouseleave="handleMicUp(event,'obs')"
-      ontouchstart="handleMicDown(event,'obs')" ontouchend="handleMicUp(event,'obs')" ontouchcancel="handleMicUp(event,'obs')">
+    <div class="status" id="obs-status"></div>
+    <button class="btn-mic" id="obs-mic"
+      onmousedown="micDown(event,'obs')" onmouseup="micUp(event,'obs')" onmouseleave="micUp(event,'obs')"
+      ontouchstart="micDown(event,'obs')" ontouchend="micUp(event,'obs')" ontouchcancel="micUp(event,'obs')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
         <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
         <line x1="12" y1="19" x2="12" y2="22"/>
       </svg>
-      <span id="obs-mic-label">Hold to Record</span>
+      <span id="obs-mic-lbl">Hold to Record</span>
     </button>
-
-    <!-- Photo picker -->
     <div class="photo-picker">
-      <input type="file" id="obs-photo-input" accept="image/*" onchange="handlePhotoSelected(event)">
+      <input type="file" id="obs-photo-input" accept="image/*" onchange="photoSelected(event)">
       <button class="btn-photo" onclick="document.getElementById('obs-photo-input').click()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
         Attach Photo
       </button>
-      <img id="obs-photo-preview" class="photo-preview" alt="preview">
-      <span class="photo-filename" id="obs-photo-filename"></span>
-      <button id="obs-photo-clear" style="display:none;background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:4px;" onclick="clearObsPhoto()">×</button>
+      <img id="obs-photo-prev" class="photo-prev" alt="preview">
+      <span class="photo-fname" id="obs-photo-fname"></span>
+      <button id="obs-photo-clr" style="display:none;background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:4px;" onclick="clearObsPhoto()">×</button>
     </div>
-
     <div class="btn-row">
-      <button class="btn-secondary" onclick="closeObsModal()">Cancel</button>
-      <button class="btn-next" onclick="saveObservation()">Add →</button>
+      <button class="btn-sec" onclick="closeObsModal()">Cancel</button>
+      <button class="btn-nxt" onclick="saveObs()">Add →</button>
     </div>
   </div>
 </div>
 
-<!-- ── REVIEW ──────────────────────────────────────────────── -->
+<!-- REVIEW -->
 <div class="screen" id="screen-review">
-  <div class="header">
-    <div class="header-top"><span class="app-label">Field Report</span></div>
-    <h1>Review & Export</h1>
+  <div class="hdr">
+    <div class="hdr-top"><span class="app-lbl">Field Report</span></div>
+    <h1>Review &amp; Export</h1>
   </div>
-  <div class="review-body" id="review-body"></div>
+  <div class="rev-body" id="rev-body"></div>
   <div style="padding:20px 24px 36px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:12px;">
-    <button class="btn-export" onclick="exportReport()">Export Report</button>
-    <button class="btn-secondary" style="text-align:center;" onclick="showScreen('screen-observations')">← Edit Observations</button>
-    <button class="btn-restart" onclick="confirmRestart()">Start Over</button>
+    <button class="btn-exp" onclick="exportReport()">Export Report</button>
+    <button class="btn-sec" style="text-align:center;" onclick="showScreen('screen-obs')">← Edit Observations</button>
+    <button class="btn-rst" onclick="confirmRestart()">Start Over</button>
   </div>
 </div>
 
-<!-- ── EXPORT / COPY ───────────────────────────────────────── -->
+<!-- EXPORTING -->
 <div class="screen" id="screen-export">
-  <div class="header">
-    <div class="header-top"><span class="app-label">Field Report</span></div>
+  <div class="hdr">
+    <div class="hdr-top"><span class="app-lbl">Field Report</span></div>
     <h1>Exporting…</h1>
   </div>
   <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 32px;gap:20px;text-align:center;">
-    <div id="export-spinner" style="width:56px;height:56px;border-radius:50%;border:3px solid var(--border);border-top-color:var(--accent);animation:spin 0.8s linear infinite;"></div>
-    <p style="font-size:14px;font-family:'DM Mono',monospace;color:var(--muted);" id="export-status-msg">Building zip file…</p>
+    <div style="width:56px;height:56px;border-radius:50%;border:3px solid var(--border);border-top-color:var(--accent);animation:spin .8s linear infinite;"></div>
+    <p style="font-size:14px;font-family:'DM Mono',monospace;color:var(--muted);" id="exp-msg">Building zip file…</p>
   </div>
   <div style="padding:20px 24px 36px;border-top:1px solid var(--border);">
-    <button class="btn-restart" onclick="confirmRestart()">Start New Report</button>
+    <button class="btn-rst" onclick="confirmRestart()">Start New Report</button>
   </div>
 </div>
 
 <!-- SUCCESS -->
 <div class="screen" id="screen-success">
   <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 32px;gap:20px;text-align:center;">
-    <div style="width:72px;height:72px;border-radius:50%;background:var(--accent-dim);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:32px;animation:pop 0.4s cubic-bezier(0.34,1.56,0.64,1);">✓</div>
+    <div style="width:72px;height:72px;border-radius:50%;background:var(--accent-dim);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:32px;animation:pop .4s cubic-bezier(.34,1.56,.64,1);">✓</div>
     <h2 style="font-size:24px;font-weight:800;">Report Ready</h2>
-    <p style="font-size:13px;font-family:'DM Mono',monospace;color:var(--muted);line-height:1.7;max-width:280px;" id="success-detail">Your zip file contains the JSON report and all attached photos. Save it to Files or share via AirDrop to bring it to your computer.</p>
+    <p style="font-size:13px;font-family:'DM Mono',monospace;color:var(--muted);line-height:1.7;max-width:280px;" id="exp-detail">Your zip file is ready.</p>
   </div>
-  <div style="padding:20px 24px 36px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:12px;">
-    <button class="btn-export" onclick="confirmRestart()">Start New Report</button>
+  <div style="padding:20px 24px 36px;border-top:1px solid var(--border);">
+    <button class="btn-exp" onclick="confirmRestart()">Start New Report</button>
   </div>
 </div>
 
-<style>
-@keyframes spin { to { transform: rotate(360deg); } }
-@keyframes pop { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-</style>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
-const fields = [
-  { key: 'project_location',   label: 'Project Location',   question: 'Where is this project located?',           hint: 'e.g. address, building name, or area' },
-  { key: 'inspector_name',     label: 'Inspector Name',     question: 'What is the name of the inspector?',       hint: 'Full name or initials' },
-  { key: 'inspection_date',    label: 'Inspection Date',    question: 'What is today\'s date?',                   hint: 'e.g. March 22, 2026' },
-  { key: 'weather_conditions', label: 'Weather Conditions', question: 'What are the current weather conditions?', hint: 'e.g. clear, overcast, raining' },
-  { key: 'site_contact',       label: 'Site Contact',       question: 'Who is the site contact or client name?',  hint: 'Name and role if known' },
+const FIELDS=[
+  {key:'project_location',label:'Project Location',q:'Where is this project located?',hint:'e.g. address, building name, or area'},
+  {key:'inspector_name',label:'Inspector Name',q:'What is the name of the inspector?',hint:'Full name or initials'},
+  {key:'inspection_date',label:'Inspection Date',q:'What is today\'s date?',hint:'e.g. March 22, 2026'},
+  {key:'weather',label:'Weather',q:'What are the current weather conditions?',hint:'e.g. clear, overcast, raining'},
+  {key:'site_contact',label:'Site Contact',q:'Who is the site contact or client name?',hint:'Name and role if known'},
 ];
 
-let currentField = 0;
-let reportData = {};
-let observations = []; // each: { description, photoFilename, photoDataUrl }
-let currentObsPhoto = null; // { filename, dataUrl }
-let recog = null;
-let recogContext = null;
-let isListening = false;
-let isWaiting = false;   // true while mic is initializing
-let releasedEarly = false; // user let go before mic was ready
-let committedText = { field: '', obs: '' };
-let micPermissionGranted = false;
+let curField=0,reportData={},observations=[],curObsPhoto=null;
+let recog=null,recogCtx=null,isListening=false,isWaiting=false,releasedEarly=false;
+let committed={fld:'',obs:''};
+let audioCtx=null,audioStream=null,audioAnalyser=null,audioRAF=null,micReadyFired=false;
 
-// ── PERMISSION ───────────────────────────────────────────────
-// Called by the explicit "Allow Microphone" button on welcome screen.
-// This is a clean user gesture with no navigation side effects.
-function requestMicPermission() {
-  const API = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!API) {
-    setStatus('perm-status', 'Speech recognition not supported in this browser.', 'error');
-    return;
-  }
-  setStatus('perm-status', 'Requesting access…', 'warning');
-  const test = new API();
-  test.continuous = false;
-  test.interimResults = false;
-  test.lang = 'en-US';
-  test.onstart = () => { test.stop(); };
-  test.onend = () => { onPermissionGranted(); };
-  test.onerror = (e) => {
-    if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
-      setStatus('perm-status', 'Denied. Tap AA in address bar → Website Settings → Microphone: Allow, then reload.', 'error');
-    } else {
-      // any other error (no-speech etc) still means permission was granted
-      onPermissionGranted();
-    }
-  };
-  try { test.start(); } catch(e) { onPermissionGranted(); }
+// Voice
+const PREF=['Samantha (Enhanced)','Samantha','Aaron (Enhanced)','Aaron','Karen (Enhanced)','Karen','Daniel (Enhanced)','Daniel'];
+let chosenVoice=null;
+function pickVoice(){
+  if(chosenVoice)return;
+  const vs=window.speechSynthesis?window.speechSynthesis.getVoices():[];
+  for(const n of PREF){const v=vs.find(x=>x.name===n);if(v){chosenVoice=v;return;}}
+  const e=vs.find(v=>v.lang.startsWith('en')&&v.name.includes('Enhanced'));if(e){chosenVoice=e;return;}
+  const l=vs.find(v=>v.lang.startsWith('en')&&v.localService);if(l){chosenVoice=l;return;}
+  const a=vs.find(v=>v.lang.startsWith('en'));if(a)chosenVoice=a;
 }
-
-function onPermissionGranted() {
-  micPermissionGranted = true;
-  const btn = document.getElementById('perm-btn');
-  btn.textContent = '✓ Microphone Allowed';
-  btn.classList.add('granted');
-  btn.onclick = null;
-  setStatus('perm-status', 'You\'re ready to go.', 'success');
-  const startBtn = document.getElementById('start-btn');
-  startBtn.style.opacity = '1';
-  startBtn.style.pointerEvents = 'auto';
-}
-
-// ── NAVIGATION ───────────────────────────────────────────────
-function showScreen(id) {
-  if (id === 'screen-review') buildReviewScreen();
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  window.scrollTo(0, 0);
-}
-
-function startReport() {
-  currentField = 0; reportData = {}; observations = [];
-  renderField();
-  showScreen('screen-field');
-  setTimeout(() => speakField(0), 600);
-}
-
-// ── SPEECH SYNTHESIS ─────────────────────────────────────────
-// Preferred voices in order — iOS enhanced/Siri voices sound most natural
-const PREFERRED_VOICES = [
-  'Samantha (Enhanced)',
-  'Samantha',
-  'Aaron',
-  'Aaron (Enhanced)',
-  'Karen',
-  'Karen (Enhanced)',
-  'Daniel',
-  'Daniel (Enhanced)',
-  'Moira',
-];
-
-let selectedVoice = null;
-
-function pickVoice() {
-  if (selectedVoice) return;
-  const voices = window.speechSynthesis.getVoices();
-  if (!voices.length) return;
-  // Try preferred list first
-  for (const name of PREFERRED_VOICES) {
-    const match = voices.find(v => v.name === name);
-    if (match) { selectedVoice = match; return; }
-  }
-  // Fall back to any enhanced English voice
-  const enhanced = voices.find(v => v.lang.startsWith('en') && v.name.includes('Enhanced'));
-  if (enhanced) { selectedVoice = enhanced; return; }
-  // Fall back to any local English voice
-  const local = voices.find(v => v.lang.startsWith('en') && v.localService);
-  if (local) { selectedVoice = local; return; }
-  // Last resort: first English voice
-  const any = voices.find(v => v.lang.startsWith('en'));
-  if (any) selectedVoice = any;
-}
-
-// Voices load async on iOS — listen for the event
-if (window.speechSynthesis) {
-  window.speechSynthesis.onvoiceschanged = pickVoice;
-  pickVoice(); // also try immediately
-}
-
-function speak(text) {
-  if (!window.speechSynthesis) return;
+if(window.speechSynthesis){window.speechSynthesis.onvoiceschanged=pickVoice;pickVoice();}
+function speak(text){
+  if(!window.speechSynthesis)return;
   window.speechSynthesis.cancel();
-  setTimeout(() => {
-    pickVoice();
-    const u = new SpeechSynthesisUtterance(text);
-    if (selectedVoice) u.voice = selectedVoice;
-    u.rate = 0.88;
-    u.pitch = 1;
-    u.volume = 1;
-    window.speechSynthesis.speak(u);
-  }, 150);
-}
-function speakField(i) { speak(fields[i].question); }
-
-// ── RENDER FIELD ─────────────────────────────────────────────
-function renderField() {
-  const f = fields[currentField];
-  document.getElementById('field-name-header').textContent = f.label;
-  document.getElementById('field-question').textContent = f.question;
-  document.getElementById('field-hint').textContent = f.hint;
-  document.getElementById('step-counter').textContent = `${currentField + 1} / ${fields.length}`;
-  document.getElementById('progress-fill').style.width = `${((currentField + 1) / fields.length) * 100}%`;
-  const existing = reportData[f.key] || '';
-  document.getElementById('transcript-text').textContent = existing;
-  committedText.field = existing;
-  setStatus('field-status', '', '');
+  setTimeout(()=>{pickVoice();const u=new SpeechSynthesisUtterance(text);if(chosenVoice)u.voice=chosenVoice;u.rate=0.88;u.pitch=1;u.volume=1;window.speechSynthesis.speak(u);},150);
 }
 
-// ── MIC BUTTON HANDLERS ──────────────────────────────────────
-function handleMicDown(e, ctx) {
-  e.preventDefault();
-  if (isListening || isWaiting) return;
-  beginRecording(ctx);
+// Permission
+function requestMicPermission(){
+  const API=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!API){setStatus('perm-status','Not supported.','err');return;}
+  setStatus('perm-status','Requesting…','warn');
+  const t=new API();t.continuous=false;t.interimResults=false;t.lang='en-US';
+  t.onstart=()=>t.stop();
+  t.onend=()=>onPermGranted();
+  t.onerror=(e)=>{if(e.error==='not-allowed'||e.error==='service-not-allowed'){setStatus('perm-status','Denied. Tap AA → Website Settings → Microphone: Allow, then reload.','err');}else{onPermGranted();}};
+  try{t.start();}catch(e){onPermGranted();}
+}
+function onPermGranted(){
+  const b=document.getElementById('perm-btn');b.textContent='✓ Microphone Allowed';b.classList.add('granted');b.onclick=null;
+  setStatus('perm-status','You\'re ready to go.','ok');
+  const s=document.getElementById('start-btn');s.style.opacity='1';s.style.pointerEvents='auto';
 }
 
-function handleMicUp(e, ctx) {
-  e.preventDefault();
-  if (isWaiting) {
-    // User released before mic was ready — flag it so we stop as soon as it starts
-    releasedEarly = true;
-    return;
-  }
-  if (isListening && recogContext === ctx) {
-    stopRecording(ctx);
-  }
+// Nav
+function showScreen(id){
+  if(id==='screen-review')buildReview();
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+function startReport(){curField=0;reportData={};observations=[];renderField();showScreen('screen-field');setTimeout(()=>speak(FIELDS[0].q),600);}
+
+// Fields
+function renderField(){
+  const f=FIELDS[curField];
+  document.getElementById('fld-name').textContent=f.label;
+  document.getElementById('fld-q').textContent=f.q;
+  document.getElementById('fld-hint').textContent=f.hint;
+  document.getElementById('step-ctr').textContent=`${curField+1} / ${FIELDS.length}`;
+  document.getElementById('prog-fill').style.width=`${((curField+1)/FIELDS.length)*100}%`;
+  const ex=reportData[f.key]||'';
+  document.getElementById('fld-tx').textContent=ex;
+  committed.fld=ex;
+  setStatus('fld-status','','');
+}
+function clearField(){document.getElementById('fld-tx').textContent='';committed.fld='';delete reportData[FIELDS[curField].key];setStatus('fld-status','','');}
+function nextField(){
+  const t=document.getElementById('fld-tx').textContent.trim();
+  if(t)reportData[FIELDS[curField].key]=t;
+  curField++;
+  if(curField>=FIELDS.length){renderObs();showScreen('screen-obs');setTimeout(()=>speak('Now add your observations. Tap the plus button to begin.'),500);return;}
+  renderField();setTimeout(()=>speak(FIELDS[curField].q),300);
+}
+function skipField(){curField++;if(curField>=FIELDS.length){renderObs();showScreen('screen-obs');return;}renderField();setTimeout(()=>speak(FIELDS[curField].q),300);}
+function goBackToFields(){curField=FIELDS.length-1;renderField();showScreen('screen-field');}
+
+// Mic
+function micDown(e,ctx){e.preventDefault();if(isListening||isWaiting)return;beginRec(ctx);}
+function micUp(e,ctx){e.preventDefault();if(isWaiting){releasedEarly=true;return;}if(isListening&&recogCtx===ctx)stopRec(ctx);}
+
+function getEl(ctx){
+  return ctx==='fld'
+    ?{btn:document.getElementById('fld-mic'),lbl:document.getElementById('fld-mic-lbl'),wave:document.getElementById('fld-wave'),box:document.getElementById('fld-tx-box'),tx:document.getElementById('fld-tx'),sid:'fld-status'}
+    :{btn:document.getElementById('obs-mic'),lbl:document.getElementById('obs-mic-lbl'),wave:document.getElementById('obs-wave'),box:document.getElementById('obs-tx-box'),tx:document.getElementById('obs-tx'),sid:'obs-status'};
 }
 
-// ── RECORDING ────────────────────────────────────────────────
-function getEl(ctx) {
-  return ctx === 'field' ? {
-    btn: document.getElementById('btn-mic'),
-    label: document.getElementById('btn-mic-label'),
-    indicator: document.getElementById('listening-indicator'),
-    box: document.getElementById('transcript-box'),
-    text: document.getElementById('transcript-text'),
-    statusId: 'field-status'
-  } : {
-    btn: document.getElementById('obs-btn-mic'),
-    label: document.getElementById('obs-mic-label'),
-    indicator: document.getElementById('obs-listening-indicator'),
-    box: document.getElementById('obs-transcript-box'),
-    text: document.getElementById('obs-transcript-text'),
-    statusId: 'obs-status'
+function beginRec(ctx){
+  const API=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!API)return;
+  const el=getEl(ctx);
+  committed[ctx]=el.tx.textContent.trim();
+  releasedEarly=false;isWaiting=true;micReadyFired=false;
+  el.btn.classList.add('waiting');el.lbl.textContent='Starting…';
+  setStatus(el.sid,'Getting ready…','warn');
+  window.speechSynthesis&&window.speechSynthesis.cancel();
+  startAudioMonitor(ctx,el);
+  recog=new API();recogCtx=ctx;recog.continuous=true;recog.interimResults=true;recog.lang='en-US';recog.maxAlternatives=1;
+  recog.onstart=()=>{
+    isWaiting=false;
+    if(releasedEarly){try{recog.stop();}catch(e){}stopAudioMonitor();el.btn.classList.remove('waiting');el.lbl.textContent='Hold to Record';setStatus(el.sid,'','');return;}
+    isListening=true;el.lbl.textContent='Waiting for sound…';
   };
-}
-
-// Audio level detection state
-let audioContext = null;
-let audioStream = null;
-let audioAnalyser = null;
-let audioLevelRAF = null;
-let micReadyFired = false;
-
-function beginRecording(ctx) {
-  const API = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!API) return;
-
-  const el = getEl(ctx);
-  committedText[ctx] = el.text.textContent.trim();
-  releasedEarly = false;
-  isWaiting = true;
-  micReadyFired = false;
-
-  // Show waiting state immediately
-  el.btn.classList.add('waiting');
-  el.label.textContent = 'Starting…';
-  setStatus(el.statusId, 'Hold still — detecting mic…', 'warning');
-
-  window.speechSynthesis && window.speechSynthesis.cancel();
-
-  // Start audio level monitoring in parallel with speech recognition.
-  // As soon as we detect real audio coming through, we flip to red "ready".
-  startAudioLevelMonitor(ctx, el);
-
-  recog = new API();
-  recogContext = ctx;
-  recog.continuous = true;
-  recog.interimResults = true;
-  recog.lang = 'en-US';
-  recog.maxAlternatives = 1;
-
-  recog.onstart = () => {
-    isWaiting = false;
-    if (releasedEarly) {
-      try { recog.stop(); } catch(e) {}
-      stopAudioLevelMonitor();
-      el.btn.classList.remove('waiting');
-      el.label.textContent = 'Hold to Record';
-      setStatus(el.statusId, '', '');
-      return;
-    }
-    isListening = true;
-    // UI will flip to red once audio level monitor detects real sound
-    // but update label now so user knows recognition is running
-    el.label.textContent = 'Waiting for sound…';
+  recog.onresult=(e)=>{
+    onMicReady(ctx,el);
+    let txt='';for(let i=0;i<e.results.length;i++)txt+=e.results[i][0].transcript;
+    const base=committed[ctx];el.tx.textContent=base?base+' '+txt:txt;
   };
-
-  recog.onresult = (e) => {
-    // Ensure UI is in listening state when results arrive
-    onMicReady(ctx, el);
-    let sessionText = '';
-    for (let i = 0; i < e.results.length; i++) {
-      sessionText += e.results[i][0].transcript;
-    }
-    const base = committedText[ctx];
-    el.text.textContent = base ? base + ' ' + sessionText : sessionText;
-  };
-
-  recog.onerror = (e) => {
-    isWaiting = false;
-    stopAudioLevelMonitor();
-    let msg = '';
-    if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
-      msg = 'Mic blocked. Tap AA → Website Settings → Microphone: Allow, then reload.';
-    } else if (e.error === 'network') {
-      msg = 'Network error.';
-    }
-    if (msg) setStatus(el.statusId, msg, 'error');
+  recog.onerror=(e)=>{
+    isWaiting=false;stopAudioMonitor();
+    let msg='';
+    if(e.error==='not-allowed'||e.error==='service-not-allowed')msg='Mic blocked. Tap AA → Website Settings → Microphone: Allow, then reload.';
+    else if(e.error==='network')msg='Network error.';
+    if(msg)setStatus(el.sid,msg,'err');
     resetMicUI(ctx);
   };
-
-  recog.onend = () => {
-    isWaiting = false;
-    stopAudioLevelMonitor();
-    committedText[ctx] = el.text.textContent.trim();
-    resetMicUI(ctx);
-  };
-
-  try { recog.start(); }
-  catch(err) {
-    isWaiting = false;
-    stopAudioLevelMonitor();
-    setStatus(el.statusId, 'Could not start recording. Try again.', 'error');
-    resetMicUI(ctx);
-    recog = null;
-  }
+  recog.onend=()=>{isWaiting=false;stopAudioMonitor();committed[ctx]=el.tx.textContent.trim();resetMicUI(ctx);};
+  try{recog.start();}catch(err){isWaiting=false;stopAudioMonitor();setStatus(el.sid,'Could not start. Try again.','err');resetMicUI(ctx);recog=null;}
+}
+function stopRec(ctx){stopAudioMonitor();if(recog){try{recog.stop();}catch(e){}recog=null;}}
+function resetMicUI(ctx){
+  isListening=false;recogCtx=null;micReadyFired=false;
+  const el=getEl(ctx);
+  el.btn.classList.remove('waiting','listening');el.lbl.textContent='Hold to Record';
+  el.wave.classList.remove('on');el.box.classList.remove('waiting','listening');
+  const s=document.getElementById(el.sid);if(!s.classList.contains('err')){s.textContent='';s.className='status';}
 }
 
-// Uses getUserMedia + AnalyserNode to watch real audio levels.
-// Fires onMicReady() the moment ambient/voice audio comes through.
-function startAudioLevelMonitor(ctx, el) {
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
-  navigator.mediaDevices.getUserMedia({ audio: true, video: false })
-    .then(stream => {
-      audioStream = stream;
-      audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      const source = audioContext.createMediaStreamSource(stream);
-      audioAnalyser = audioContext.createAnalyser();
-      audioAnalyser.fftSize = 256;
-      audioAnalyser.smoothingTimeConstant = 0.4;
-      source.connect(audioAnalyser);
-
-      const dataArray = new Uint8Array(audioAnalyser.frequencyBinCount);
-
-      function checkLevel() {
-        if (!audioAnalyser) return;
-        audioAnalyser.getByteFrequencyData(dataArray);
-        // Average the lower frequency bins (voice range)
-        let sum = 0;
-        const bins = Math.floor(dataArray.length / 2);
-        for (let i = 0; i < bins; i++) sum += dataArray[i];
-        const avg = sum / bins;
-
-        // Threshold: any meaningful audio activity (including ambient)
-        // 12 is low enough to catch ambient room noise
-        if (avg > 12) {
-          onMicReady(ctx, el);
-        } else {
-          audioLevelRAF = requestAnimationFrame(checkLevel);
-        }
-      }
-      audioLevelRAF = requestAnimationFrame(checkLevel);
-    })
-    .catch(() => {
-      // getUserMedia failed — fall back to just showing ready after recog.onstart
-    });
+// Audio monitor
+function startAudioMonitor(ctx,el){
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)return;
+  navigator.mediaDevices.getUserMedia({audio:true,video:false}).then(stream=>{
+    audioStream=stream;
+    audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+    const src=audioCtx.createMediaStreamSource(stream);
+    audioAnalyser=audioCtx.createAnalyser();audioAnalyser.fftSize=256;audioAnalyser.smoothingTimeConstant=0.4;
+    src.connect(audioAnalyser);
+    const data=new Uint8Array(audioAnalyser.frequencyBinCount);
+    function check(){
+      if(!audioAnalyser)return;
+      audioAnalyser.getByteFrequencyData(data);
+      let sum=0;const bins=Math.floor(data.length/2);for(let i=0;i<bins;i++)sum+=data[i];
+      if(sum/bins>12)onMicReady(ctx,el);else audioRAF=requestAnimationFrame(check);
+    }
+    audioRAF=requestAnimationFrame(check);
+  }).catch(()=>{});
+}
+function stopAudioMonitor(){
+  if(audioRAF){cancelAnimationFrame(audioRAF);audioRAF=null;}
+  audioAnalyser=null;
+  if(audioStream){audioStream.getTracks().forEach(t=>t.stop());audioStream=null;}
+  if(audioCtx){try{audioCtx.close();}catch(e){}audioCtx=null;}
+}
+function onMicReady(ctx,el){
+  if(micReadyFired)return;micReadyFired=true;stopAudioMonitor();
+  el.btn.classList.remove('waiting');el.btn.classList.add('listening');
+  el.lbl.textContent='Release to Stop';el.wave.classList.add('on');el.box.classList.add('listening');
+  setStatus(el.sid,'🎙 Listening…','ok');
 }
 
-function stopAudioLevelMonitor() {
-  if (audioLevelRAF) { cancelAnimationFrame(audioLevelRAF); audioLevelRAF = null; }
-  if (audioAnalyser) { audioAnalyser = null; }
-  if (audioStream) { audioStream.getTracks().forEach(t => t.stop()); audioStream = null; }
-  if (audioContext) { try { audioContext.close(); } catch(e) {} audioContext = null; }
-}
-
-// Called the moment real audio is detected — flips button to red "ready to speak"
-function onMicReady(ctx, el) {
-  if (micReadyFired) return;
-  micReadyFired = true;
-  // Fully close the AudioContext immediately so iOS releases the audio session
-  stopAudioLevelMonitor();
-  el.btn.classList.remove('waiting');
-  el.btn.classList.add('listening');
-  el.label.textContent = 'Release to Stop';
-  el.indicator.classList.add('active');
-  el.box.classList.add('listening');
-  setStatus(el.statusId, '🎙 Listening…', 'success');
-}
-
-function stopRecording(ctx) {
-  stopAudioLevelMonitor();
-  if (recog) { try { recog.stop(); } catch(e) {} recog = null; }
-}
-
-function resetMicUI(ctx) {
-  isListening = false;
-  recogContext = null;
-  micReadyFired = false;
-  const el = getEl(ctx);
-  el.btn.classList.remove('waiting', 'listening');
-  el.label.textContent = 'Hold to Record';
-  el.indicator.classList.remove('active');
-  el.box.classList.remove('listening', 'ready');
-  const s = document.getElementById(el.statusId);
-  if (!s.classList.contains('error')) { s.textContent = ''; s.className = 'status-msg'; }
-}
-
-// ── FIELD NAV ────────────────────────────────────────────────
-function nextField() {
-  const text = document.getElementById('transcript-text').textContent.trim();
-  if (text) reportData[fields[currentField].key] = text;
-  currentField++;
-  if (currentField >= fields.length) {
-    renderObservations(); showScreen('screen-observations');
-    setTimeout(() => speak('Now add your observations. Tap the plus button to begin.'), 500);
-    return;
-  }
-  renderField();
-  setTimeout(() => speakField(currentField), 300);
-}
-
-function skipField() {
-  currentField++;
-  if (currentField >= fields.length) { renderObservations(); showScreen('screen-observations'); return; }
-  renderField();
-  setTimeout(() => speakField(currentField), 300);
-}
-
-function goBackToFields() {
-  currentField = fields.length - 1;
-  renderField();
-  showScreen('screen-field');
-}
-
-// ── FIELD CLEAR ──────────────────────────────────────────────
-function clearField() {
-  const el = document.getElementById('transcript-text');
-  el.textContent = '';
-  committedText.field = '';
-  delete reportData[fields[currentField].key];
-  setStatus('field-status', '', '');
-}
-
-// ── OBSERVATIONS ─────────────────────────────────────────────
-function openObsModal() {
-  document.getElementById('obs-transcript-text').textContent = '';
-  committedText.obs = '';
-  currentObsPhoto = null;
-  document.getElementById('obs-photo-preview').style.display = 'none';
-  document.getElementById('obs-photo-filename').textContent = '';
-  document.getElementById('obs-photo-clear').style.display = 'none';
-  document.getElementById('obs-photo-input').value = '';
-  setStatus('obs-status', '', '');
+// Observations
+function openObsModal(){
+  document.getElementById('obs-tx').textContent='';committed.obs='';curObsPhoto=null;
+  document.getElementById('obs-photo-prev').style.display='none';
+  document.getElementById('obs-photo-fname').textContent='';
+  document.getElementById('obs-photo-clr').style.display='none';
+  document.getElementById('obs-photo-input').value='';
+  setStatus('obs-status','','');
   document.getElementById('obs-modal').classList.add('active');
-  setTimeout(() => speak('Describe what you observed.'), 300);
+  setTimeout(()=>speak('Describe what you observed.'),300);
 }
-function closeObsModal() {
-  stopRecording('obs');
-  document.getElementById('obs-modal').classList.remove('active');
+function closeObsModal(){stopRec('obs');document.getElementById('obs-modal').classList.remove('active');}
+function saveObs(){
+  const text=document.getElementById('obs-tx').textContent.trim();
+  if(!text){setStatus('obs-status','Please add a description first.','err');return;}
+  observations.push({description:text,photoFilename:curObsPhoto?curObsPhoto.filename:null,photoDataUrl:curObsPhoto?curObsPhoto.dataUrl:null});
+  closeObsModal();renderObs();
 }
-function saveObservation() {
-  const text = document.getElementById('obs-transcript-text').textContent.trim();
-  if (!text) { setStatus('obs-status', 'Please add a description first.', 'error'); return; }
-  observations.push({
-    description: text,
-    photoFilename: currentObsPhoto ? currentObsPhoto.filename : null,
-    photoDataUrl: currentObsPhoto ? currentObsPhoto.dataUrl : null,
-  });
-  closeObsModal();
-  renderObservations();
-}
-
-function handlePhotoSelected(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (ev) => {
-    currentObsPhoto = { filename: file.name, dataUrl: ev.target.result };
-    const preview = document.getElementById('obs-photo-preview');
-    preview.src = ev.target.result;
-    preview.style.display = 'block';
-    document.getElementById('obs-photo-filename').textContent = file.name;
-    document.getElementById('obs-photo-clear').style.display = 'block';
+function photoSelected(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=(ev)=>{
+    curObsPhoto={filename:file.name,dataUrl:ev.target.result};
+    const p=document.getElementById('obs-photo-prev');p.src=ev.target.result;p.style.display='block';
+    document.getElementById('obs-photo-fname').textContent=file.name;
+    document.getElementById('obs-photo-clr').style.display='block';
   };
   reader.readAsDataURL(file);
 }
-
-function clearObsPhoto() {
-  currentObsPhoto = null;
-  document.getElementById('obs-photo-preview').style.display = 'none';
-  document.getElementById('obs-photo-filename').textContent = '';
-  document.getElementById('obs-photo-clear').style.display = 'none';
-  document.getElementById('obs-photo-input').value = '';
-}
-
-function renderObservations() {
-  const list = document.getElementById('obs-list');
-  if (!observations.length) {
-    list.innerHTML = '<div class="obs-empty">No observations yet.<br>Tap below to add one.</div>';
-    return;
-  }
-  list.innerHTML = observations.map((obs, i) => `
+function clearObsPhoto(){curObsPhoto=null;document.getElementById('obs-photo-prev').style.display='none';document.getElementById('obs-photo-fname').textContent='';document.getElementById('obs-photo-clr').style.display='none';document.getElementById('obs-photo-input').value='';}
+function renderObs(){
+  const list=document.getElementById('obs-list');
+  if(!observations.length){list.innerHTML='<div class="obs-empty">No observations yet.<br>Tap below to add one.</div>';return;}
+  list.innerHTML=observations.map((o,i)=>`
     <div class="obs-card">
       <span class="obs-num">OBS ${i+1}</span>
       <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
-        <span class="obs-text">${obs.description}</span>
-        ${obs.photoFilename ? `
-          <div style="display:flex;align-items:center;gap:8px;">
-            ${obs.photoDataUrl ? `<img src="${obs.photoDataUrl}" class="obs-card-photo" alt="photo">` : ''}
-            <span style="font-size:11px;font-family:'DM Mono',monospace;color:var(--accent);">${obs.photoFilename}</span>
-          </div>` : ''}
+        <span class="obs-text">${o.description}</span>
+        ${o.photoFilename?`<div style="display:flex;align-items:center;gap:8px;">${o.photoDataUrl?`<img src="${o.photoDataUrl}" class="obs-card-photo" alt="photo">`:''}
+          <span style="font-size:11px;font-family:'DM Mono',monospace;color:var(--accent);">${o.photoFilename}</span></div>`:''}
       </div>
-      <button class="obs-delete" onclick="deleteObs(${i})">×</button>
+      <button class="obs-del" onclick="delObs(${i})">×</button>
     </div>`).join('');
 }
-function deleteObs(i) { observations.splice(i, 1); renderObservations(); }
+function delObs(i){observations.splice(i,1);renderObs();}
 
-// ── REVIEW ───────────────────────────────────────────────────
-function buildReviewScreen() {
-  let html = '<div><div class="review-section-label">Report Fields</div>';
-  fields.forEach(f => {
-    const val = reportData[f.key] || '<span style="color:var(--muted);font-style:italic">Not provided</span>';
-    html += `<div class="review-field"><div class="review-field-label">${f.label}</div><div class="review-field-value">${val}</div></div>`;
+// Review
+function buildReview(){
+  let html='<div><div class="rev-sec-lbl">Report Fields</div>';
+  FIELDS.forEach(f=>{
+    const val=reportData[f.key]||'<span style="color:var(--muted);font-style:italic">Not provided</span>';
+    html+=`<div class="rev-fld"><div class="rev-fld-lbl">${f.label}</div><div class="rev-fld-val">${val}</div></div>`;
   });
-  html += '</div>';
-  if (observations.length) {
-    html += `<div><div class="review-section-label">Observations (${observations.length})</div>`;
-    observations.forEach((obs, i) => {
-      html += `<div class="review-field">
-        <div class="review-field-label">Observation ${i+1}</div>
-        <div class="review-field-value">${obs.description}</div>
-        ${obs.photoFilename ? `<div style="display:flex;align-items:center;gap:8px;margin-top:6px;">
-          ${obs.photoDataUrl ? `<img src="${obs.photoDataUrl}" style="width:40px;height:40px;border-radius:6px;object-fit:cover;border:1px solid var(--border);">` : ''}
-          <span style="font-size:11px;font-family:'DM Mono',monospace;color:var(--accent);">${obs.photoFilename}</span>
-        </div>` : ''}
+  html+='</div>';
+  if(observations.length){
+    html+=`<div><div class="rev-sec-lbl">Observations (${observations.length})</div>`;
+    observations.forEach((o,i)=>{
+      html+=`<div class="rev-fld"><div class="rev-fld-lbl">Observation ${i+1}</div><div class="rev-fld-val">${o.description}</div>
+        ${o.photoFilename?`<div style="display:flex;align-items:center;gap:8px;margin-top:6px;">${o.photoDataUrl?`<img src="${o.photoDataUrl}" style="width:40px;height:40px;border-radius:6px;object-fit:cover;border:1px solid var(--border);">`:''}
+          <span style="font-size:11px;font-family:'DM Mono',monospace;color:var(--accent);">${o.photoFilename}</span></div>`:''}
       </div>`;
     });
-    html += '</div>';
+    html+='</div>';
   }
-  document.getElementById('review-body').innerHTML = html;
+  document.getElementById('rev-body').innerHTML=html;
 }
 
-// ── EXPORT ───────────────────────────────────────────────────
-async function exportReport() {
+// Export
+async function exportReport(){
   showScreen('screen-export');
-  const statusMsg = document.getElementById('export-status-msg');
-
-  try {
-    statusMsg.textContent = 'Building report…';
-    const timestamp = new Date().toISOString().split('T')[0];
-
-    const report = {
-      exported_at: new Date().toISOString(),
-      fields: reportData,
-      observations: observations.map((obs, i) => ({
-        id: i + 1,
-        description: obs.description,
-        photo_filename: obs.photoFilename || null,
-        photo_ref: `Photo ${i + 1}`
-      }))
-    };
-
-    statusMsg.textContent = 'Adding photos…';
-    const zip = new JSZip();
-    zip.file('report.json', JSON.stringify(report, null, 2));
-
-    // Add each photo that has a dataUrl
-    for (const obs of observations) {
-      if (obs.photoDataUrl && obs.photoFilename) {
-        // Strip base64 header e.g. "data:image/jpeg;base64,"
-        const base64 = obs.photoDataUrl.split(',')[1];
-        zip.file(`photos/${obs.photoFilename}`, base64, { base64: true });
-      }
-    }
-
-    statusMsg.textContent = 'Compressing…';
-    const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
-
-    statusMsg.textContent = 'Preparing download…';
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `field-report_${timestamp}.zip`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 5000);
-
-    // Count photos attached
-    const photoCount = observations.filter(o => o.photoFilename).length;
-    document.getElementById('success-detail').textContent =
-      `Zip contains report.json and ${photoCount} photo${photoCount !== 1 ? 's' : ''} in a photos/ folder. Save to Files or share via AirDrop to bring it to your computer.`;
-
+  const msg=document.getElementById('exp-msg');
+  try{
+    msg.textContent='Building report…';
+    const ts=new Date().toISOString().split('T')[0];
+    const report={exported_at:new Date().toISOString(),fields:reportData,observations:observations.map((o,i)=>({id:i+1,description:o.description,photo_filename:o.photoFilename||null,photo_ref:`Photo ${i+1}`}))};
+    msg.textContent='Adding photos…';
+    const zip=new JSZip();
+    zip.file('report.json',JSON.stringify(report,null,2));
+    for(const o of observations){if(o.photoDataUrl&&o.photoFilename)zip.file(`photos/${o.photoFilename}`,o.photoDataUrl.split(',')[1],{base64:true});}
+    msg.textContent='Compressing…';
+    const blob=await zip.generateAsync({type:'blob',compression:'DEFLATE',compressionOptions:{level:6}});
+    msg.textContent='Preparing download…';
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=url;a.download=`field-report_${ts}.zip`;
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url),5000);
+    const pc=observations.filter(o=>o.photoFilename).length;
+    document.getElementById('exp-detail').textContent=`Zip contains report.json and ${pc} photo${pc!==1?'s':''} in a photos/ folder. Save to Files or share via AirDrop.`;
     showScreen('screen-success');
+  }catch(err){msg.textContent=`Error: ${err.message}. Try again.`;}
+}
 
-  } catch(err) {
-    statusMsg.textContent = `Error: ${err.message}. Try again.`;
-    document.getElementById('export-spinner').style.display = 'none';
-  }
-}
-function confirmRestart() {
-  if (confirm('Start a new report? Current data will be cleared.')) showScreen('screen-welcome');
-}
-function setStatus(id, msg, type) {
-  const el = document.getElementById(id);
-  el.textContent = msg;
-  el.className = 'status-msg' + (type ? ' ' + type : '');
-}
+function confirmRestart(){if(confirm('Start a new report? Current data will be cleared.'))showScreen('screen-welcome');}
+function setStatus(id,msg,type){const el=document.getElementById(id);el.textContent=msg;el.className='status'+(type?' '+type:'');}
 </script>
 </body>
 </html>
