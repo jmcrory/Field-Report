@@ -6,6 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Field Report">
+<!-- v6 -->
 <title>Field Report</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -14,6 +15,7 @@
     --bg: #0d0f0e; --surface: #161a18; --surface2: #1e2420;
     --border: #2a3230; --accent: #4eff91; --accent-dim: #1a4a30;
     --text: #e8ede9; --muted: #6b7a70; --danger: #ff5a5a;
+    --warning: #ffcc44;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; min-height: 100vh; min-height: 100dvh; overflow-x: hidden; }
@@ -34,6 +36,7 @@
 
   .transcript-box { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 18px; min-height: 100px; font-size: 16px; line-height: 1.6; position: relative; transition: border-color 0.2s; }
   .transcript-box.listening { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(78,255,145,0.08); }
+  .transcript-box.ready { border-color: var(--warning); box-shadow: 0 0 0 3px rgba(255,204,68,0.1); }
   .transcript-text { outline: none; min-height: 60px; color: var(--text); }
   [contenteditable]:empty:before { content: attr(data-placeholder); color: var(--muted); font-style: italic; pointer-events: none; }
 
@@ -47,18 +50,19 @@
   .listening-indicator span:nth-child(5) { height: 6px; animation-delay: 0.05s; }
   @keyframes wave { 0%,100% { transform: scaleY(0.5); opacity: 0.5; } 50% { transform: scaleY(1); opacity: 1; } }
 
-  /* Hold to record button */
   .btn-mic {
     background: var(--accent); color: #000; border: none; border-radius: 100px;
-    padding: 18px 32px; font-size: 15px; font-weight: 700; font-family: 'Syne', sans-serif;
+    padding: 20px 32px; font-size: 15px; font-weight: 700; font-family: 'Syne', sans-serif;
     cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
     box-shadow: 0 4px 24px rgba(78,255,145,0.25); width: 100%; -webkit-appearance: none;
     touch-action: none; user-select: none; -webkit-user-select: none;
-    transition: transform 0.1s, background 0.15s;
+    transition: background 0.15s, box-shadow 0.15s;
+  }
+  .btn-mic.waiting {
+    background: var(--warning); box-shadow: 0 4px 24px rgba(255,204,68,0.3); color: #000;
   }
   .btn-mic.listening {
-    background: var(--danger); box-shadow: 0 4px 24px rgba(255,90,90,0.3);
-    color: #fff; transform: scale(0.97);
+    background: var(--danger); box-shadow: 0 4px 24px rgba(255,90,90,0.3); color: #fff;
   }
   .btn-mic svg { width: 20px; height: 20px; flex-shrink: 0; }
 
@@ -93,21 +97,26 @@
   .status-msg { font-size: 12px; font-family: 'DM Mono', monospace; color: var(--muted); text-align: center; min-height: 18px; line-height: 1.5; }
   .status-msg.error { color: var(--danger); }
   .status-msg.success { color: var(--accent); }
+  .status-msg.warning { color: var(--warning); }
 
   .obs-screen-body { flex: 1; padding: 24px; display: flex; flex-direction: column; gap: 20px; overflow-y: auto; }
   .obs-footer { padding: 20px 24px 36px; border-top: 1px solid var(--border); }
-
   .btn-export { background: var(--accent); color: #000; border: none; border-radius: 100px; padding: 18px; font-size: 16px; font-weight: 800; font-family: 'Syne', sans-serif; cursor: pointer; text-align: center; box-shadow: 0 4px 24px rgba(78,255,145,0.25); width: 100%; -webkit-appearance: none; touch-action: manipulation; }
   .btn-export:active { opacity: 0.85; }
   .btn-restart { background: none; border: none; color: var(--muted); font-size: 14px; font-family: 'Syne', sans-serif; cursor: pointer; text-align: center; padding: 8px; width: 100%; touch-action: manipulation; }
   .export-text-area { background: var(--surface2); border: 1px solid var(--border); border-radius: 14px; padding: 16px; font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text); width: 100%; height: 180px; resize: none; outline: none; }
+
+  /* Permission screen */
+  .perm-btn { background: var(--accent); color: #000; border: none; border-radius: 100px; padding: 18px 32px; font-size: 16px; font-weight: 800; font-family: 'Syne', sans-serif; cursor: pointer; width: 100%; touch-action: manipulation; -webkit-appearance: none; box-shadow: 0 4px 24px rgba(78,255,145,0.25); }
+  .perm-btn:active { opacity: 0.85; }
+  .perm-btn.granted { background: var(--surface2); color: var(--accent); box-shadow: none; border: 1px solid var(--accent); }
 </style>
 </head>
 <body>
 
-<!-- ── WELCOME ─────────────────────────────────────────────── -->
+<!-- ── WELCOME / PERMISSION ────────────────────────────────── -->
 <div class="screen active" id="screen-welcome">
-  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:48px 32px;text-align:center;gap:24px;">
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:48px 32px;text-align:center;gap:28px;">
     <div style="width:72px;height:72px;border-radius:20px;background:var(--accent-dim);border:1.5px solid var(--accent);display:flex;align-items:center;justify-content:center;">
       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#4eff91" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
@@ -120,10 +129,22 @@
       <h1 style="font-size:32px;font-weight:800;letter-spacing:-0.03em;line-height:1.1;">Capture your<br>report by voice.</h1>
     </div>
     <p style="font-size:14px;color:var(--muted);line-height:1.7;font-family:'DM Mono',monospace;max-width:280px;">Hold the mic button while you speak, release when done. The app reads each prompt aloud.</p>
-    <button class="btn-next" style="width:100%;flex:none;padding:18px;" onclick="startReport()">Start New Report →</button>
-  </div>
-  <div style="padding:0 32px 40px;text-align:center;">
-    <p style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;">Safari will ask for microphone access<br>when you first hold the record button.</p>
+
+    <!-- Step 1: Grant mic -->
+    <div style="width:100%;display:flex;flex-direction:column;gap:10px;" id="perm-section">
+      <div style="font-size:10px;font-family:'DM Mono',monospace;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;">Step 1 of 2</div>
+      <button class="perm-btn" id="perm-btn" onclick="requestMicPermission()">
+        Allow Microphone Access
+      </button>
+      <div class="status-msg" id="perm-status"></div>
+    </div>
+
+    <!-- Step 2: Start (disabled until permission granted) -->
+    <div style="width:100%;">
+      <button class="btn-next" id="start-btn" style="width:100%;padding:18px;opacity:0.25;pointer-events:none;" onclick="startReport()">
+        Start New Report →
+      </button>
+    </div>
   </div>
 </div>
 
@@ -144,12 +165,12 @@
     </div>
     <div class="transcript-box" id="transcript-box">
       <div class="listening-indicator" id="listening-indicator"><span></span><span></span><span></span><span></span><span></span></div>
-      <div class="transcript-text" id="transcript-text" contenteditable="true" data-placeholder="Hold the mic button and speak, or type here..."></div>
+      <div class="transcript-text" id="transcript-text" contenteditable="true" data-placeholder="Hold the mic and speak, or type here..."></div>
     </div>
     <div class="status-msg" id="field-status"></div>
     <button class="btn-mic" id="btn-mic"
-      onmousedown="startListening('field')" onmouseup="stopListening('field')" onmouseleave="stopListening('field')"
-      ontouchstart="handleTouchStart(event,'field')" ontouchend="handleTouchEnd(event,'field')" ontouchcancel="handleTouchEnd(event,'field')">
+      onmousedown="handleMicDown(event,'field')" onmouseup="handleMicUp(event,'field')" onmouseleave="handleMicUp(event,'field')"
+      ontouchstart="handleMicDown(event,'field')" ontouchend="handleMicUp(event,'field')" ontouchcancel="handleMicUp(event,'field')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
         <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
@@ -193,8 +214,8 @@
     </div>
     <div class="status-msg" id="obs-status"></div>
     <button class="btn-mic" id="obs-btn-mic"
-      onmousedown="startListening('obs')" onmouseup="stopListening('obs')" onmouseleave="stopListening('obs')"
-      ontouchstart="handleTouchStart(event,'obs')" ontouchend="handleTouchEnd(event,'obs')" ontouchcancel="handleTouchEnd(event,'obs')">
+      onmousedown="handleMicDown(event,'obs')" onmouseup="handleMicUp(event,'obs')" onmouseleave="handleMicUp(event,'obs')"
+      ontouchstart="handleMicDown(event,'obs')" ontouchend="handleMicUp(event,'obs')" ontouchcancel="handleMicUp(event,'obs')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
         <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
@@ -253,24 +274,51 @@ const fields = [
 let currentField = 0;
 let reportData = {};
 let observations = [];
-
-// One recognition instance shared, keyed by context
 let recog = null;
-let recogContext = null; // 'field' or 'obs'
+let recogContext = null;
 let isListening = false;
-
-// Tracks the committed (final) text before current session started
-// so we never double-append
+let isWaiting = false;   // true while mic is initializing
+let releasedEarly = false; // user let go before mic was ready
 let committedText = { field: '', obs: '' };
+let micPermissionGranted = false;
 
-// ── TOUCH HANDLERS (prevent ghost click) ─────────────────────
-function handleTouchStart(e, ctx) {
-  e.preventDefault();
-  startListening(ctx);
+// ── PERMISSION ───────────────────────────────────────────────
+// Called by the explicit "Allow Microphone" button on welcome screen.
+// This is a clean user gesture with no navigation side effects.
+function requestMicPermission() {
+  const API = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!API) {
+    setStatus('perm-status', 'Speech recognition not supported in this browser.', 'error');
+    return;
+  }
+  setStatus('perm-status', 'Requesting access…', 'warning');
+  const test = new API();
+  test.continuous = false;
+  test.interimResults = false;
+  test.lang = 'en-US';
+  test.onstart = () => { test.stop(); };
+  test.onend = () => { onPermissionGranted(); };
+  test.onerror = (e) => {
+    if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+      setStatus('perm-status', 'Denied. Tap AA in address bar → Website Settings → Microphone: Allow, then reload.', 'error');
+    } else {
+      // any other error (no-speech etc) still means permission was granted
+      onPermissionGranted();
+    }
+  };
+  try { test.start(); } catch(e) { onPermissionGranted(); }
 }
-function handleTouchEnd(e, ctx) {
-  e.preventDefault();
-  stopListening(ctx);
+
+function onPermissionGranted() {
+  micPermissionGranted = true;
+  const btn = document.getElementById('perm-btn');
+  btn.textContent = '✓ Microphone Allowed';
+  btn.classList.add('granted');
+  btn.onclick = null;
+  setStatus('perm-status', 'You\'re ready to go.', 'success');
+  const startBtn = document.getElementById('start-btn');
+  startBtn.style.opacity = '1';
+  startBtn.style.pointerEvents = 'auto';
 }
 
 // ── NAVIGATION ───────────────────────────────────────────────
@@ -314,128 +362,151 @@ function renderField() {
   setStatus('field-status', '', '');
 }
 
-// ── SPEECH RECOGNITION ───────────────────────────────────────
-function getSpeechAPI() { return window.SpeechRecognition || window.webkitSpeechRecognition || null; }
+// ── MIC BUTTON HANDLERS ──────────────────────────────────────
+function handleMicDown(e, ctx) {
+  e.preventDefault();
+  if (isListening || isWaiting) return;
+  beginRecording(ctx);
+}
 
-function getElements(ctx) {
-  if (ctx === 'field') return {
+function handleMicUp(e, ctx) {
+  e.preventDefault();
+  if (isWaiting) {
+    // User released before mic was ready — flag it so we stop as soon as it starts
+    releasedEarly = true;
+    return;
+  }
+  if (isListening && recogContext === ctx) {
+    stopRecording(ctx);
+  }
+}
+
+// ── RECORDING ────────────────────────────────────────────────
+function getEl(ctx) {
+  return ctx === 'field' ? {
     btn: document.getElementById('btn-mic'),
     label: document.getElementById('btn-mic-label'),
     indicator: document.getElementById('listening-indicator'),
     box: document.getElementById('transcript-box'),
     text: document.getElementById('transcript-text'),
-    status: 'field-status'
-  };
-  return {
+    statusId: 'field-status'
+  } : {
     btn: document.getElementById('obs-btn-mic'),
     label: document.getElementById('obs-mic-label'),
     indicator: document.getElementById('obs-listening-indicator'),
     box: document.getElementById('obs-transcript-box'),
     text: document.getElementById('obs-transcript-text'),
-    status: 'obs-status'
+    statusId: 'obs-status'
   };
 }
 
-function startListening(ctx) {
-  if (isListening) return;
-  const API = getSpeechAPI();
-  if (!API) { setStatus(ctx === 'field' ? 'field-status' : 'obs-status', 'Speech not supported — please type.', 'error'); return; }
+function beginRecording(ctx) {
+  const API = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!API) return;
+
+  const el = getEl(ctx);
+  committedText[ctx] = el.text.textContent.trim();
+  releasedEarly = false;
+  isWaiting = true;
+
+  // Show "initializing" state immediately on press
+  el.btn.classList.add('waiting');
+  el.label.textContent = 'Starting…';
+  setStatus(el.statusId, 'Getting ready…', 'warning');
 
   window.speechSynthesis && window.speechSynthesis.cancel();
 
-  const el = getElements(ctx);
-
-  // Snapshot whatever text is already in the box as the base
-  committedText[ctx] = el.text.textContent.trim();
-
   recog = new API();
   recogContext = ctx;
-  recog.continuous = true;      // keep listening while held
+  recog.continuous = true;
   recog.interimResults = true;
   recog.lang = 'en-US';
   recog.maxAlternatives = 1;
 
   recog.onstart = () => {
+    isWaiting = false;
+    // If user already released, stop immediately
+    if (releasedEarly) {
+      try { recog.stop(); } catch(e) {}
+      el.btn.classList.remove('waiting');
+      el.label.textContent = 'Hold to Record';
+      setStatus(el.statusId, '', '');
+      return;
+    }
     isListening = true;
-    // Short delay so iOS mic is fully open before user speaks
-    setTimeout(() => {
-      el.btn.classList.add('listening');
-      el.label.textContent = 'Release to Stop';
-      el.indicator.classList.add('active');
-      el.box.classList.add('listening');
-      setStatus(el.status, '🎙 Speak now…', 'success');
-      // Brief beep to signal ready
-      try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain); gain.connect(ctx.destination);
-        osc.frequency.value = 880;
-        gain.gain.setValueAtTime(0.2, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
-        osc.start(ctx.currentTime);
-        osc.stop(ctx.currentTime + 0.15);
-      } catch(e) {}
-    }, 500);
+    el.btn.classList.remove('waiting');
+    el.btn.classList.add('listening');
+    el.label.textContent = 'Release to Stop';
+    el.indicator.classList.add('active');
+    el.box.classList.add('listening');
+    setStatus(el.statusId, '🎙 Listening…', 'success');
+    playBeep();
   };
 
   recog.onresult = (e) => {
-    // Build the full transcript from ALL results in this session
     let sessionText = '';
     for (let i = 0; i < e.results.length; i++) {
       sessionText += e.results[i][0].transcript;
     }
-    // Combine with whatever was there before this session
     const base = committedText[ctx];
     el.text.textContent = base ? base + ' ' + sessionText : sessionText;
   };
 
   recog.onerror = (e) => {
-    let msg = 'Could not access microphone.';
+    isWaiting = false;
+    let msg = '';
     if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
       msg = 'Mic blocked. Tap AA → Website Settings → Microphone: Allow, then reload.';
-    } else if (e.error === 'no-speech') {
-      msg = '';
     } else if (e.error === 'network') {
       msg = 'Network error.';
     }
-    if (msg) setStatus(el.status, msg, 'error');
+    if (msg) setStatus(el.statusId, msg, 'error');
     resetMicUI(ctx);
   };
 
   recog.onend = () => {
-    // When recognition ends, lock in the current text as committed
+    isWaiting = false;
     committedText[ctx] = el.text.textContent.trim();
     resetMicUI(ctx);
   };
 
-  try {
-    recog.start();
-  } catch(err) {
-    setStatus(el.status, 'Could not start recording. Try again.', 'error');
+  try { recog.start(); }
+  catch(err) {
+    isWaiting = false;
+    setStatus(el.statusId, 'Could not start recording. Try again.', 'error');
+    resetMicUI(ctx);
     recog = null;
   }
 }
 
-function stopListening(ctx) {
-  if (!isListening || recogContext !== ctx) return;
-  if (recog) {
-    try { recog.stop(); } catch(e) {}
-    recog = null;
-  }
+function stopRecording(ctx) {
+  if (recog) { try { recog.stop(); } catch(e) {} recog = null; }
 }
 
 function resetMicUI(ctx) {
   isListening = false;
   recogContext = null;
-  const el = getElements(ctx);
-  el.btn.classList.remove('listening');
+  const el = getEl(ctx);
+  el.btn.classList.remove('waiting', 'listening');
   el.label.textContent = 'Hold to Record';
   el.indicator.classList.remove('active');
-  el.box.classList.remove('listening');
-  if (['Listening…', '🎙 Speak now…'].includes(document.getElementById(el.status).textContent)) {
-    setStatus(el.status, '', '');
-  }
+  el.box.classList.remove('listening', 'ready');
+  const s = document.getElementById(el.statusId);
+  if (!s.classList.contains('error')) { s.textContent = ''; s.className = 'status-msg'; }
+}
+
+function playBeep() {
+  try {
+    const ac = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ac.createOscillator();
+    const gain = ac.createGain();
+    osc.connect(gain); gain.connect(ac.destination);
+    osc.frequency.value = 880;
+    gain.gain.setValueAtTime(0.15, ac.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.12);
+    osc.start(ac.currentTime);
+    osc.stop(ac.currentTime + 0.12);
+  } catch(e) {}
 }
 
 // ── FIELD NAV ────────────────────────────────────────────────
@@ -467,33 +538,24 @@ function goBackToFields() {
 
 // ── OBSERVATIONS ─────────────────────────────────────────────
 function openObsModal() {
-  const el = document.getElementById('obs-transcript-text');
-  el.textContent = '';
+  document.getElementById('obs-transcript-text').textContent = '';
   committedText.obs = '';
   setStatus('obs-status', '', '');
   document.getElementById('obs-modal').classList.add('active');
   setTimeout(() => speak('Describe what you observed.'), 300);
 }
-
 function closeObsModal() {
-  stopListening('obs');
+  stopRecording('obs');
   document.getElementById('obs-modal').classList.remove('active');
 }
-
 function saveObservation() {
   const text = document.getElementById('obs-transcript-text').textContent.trim();
   if (!text) { setStatus('obs-status', 'Please add a description first.', 'error'); return; }
-  observations.push(text);
-  closeObsModal();
-  renderObservations();
+  observations.push(text); closeObsModal(); renderObservations();
 }
-
 function renderObservations() {
   const list = document.getElementById('obs-list');
-  if (!observations.length) {
-    list.innerHTML = '<div class="obs-empty">No observations yet.<br>Tap below to add one.</div>';
-    return;
-  }
+  if (!observations.length) { list.innerHTML = '<div class="obs-empty">No observations yet.<br>Tap below to add one.</div>'; return; }
   list.innerHTML = observations.map((obs, i) => `
     <div class="obs-card">
       <span class="obs-num">OBS ${i+1}</span>
@@ -501,7 +563,6 @@ function renderObservations() {
       <button class="obs-delete" onclick="deleteObs(${i})">×</button>
     </div>`).join('');
 }
-
 function deleteObs(i) { observations.splice(i, 1); renderObservations(); }
 
 // ── REVIEW ───────────────────────────────────────────────────
@@ -527,34 +588,26 @@ function exportReport() {
   const report = {
     exported_at: new Date().toISOString(),
     fields: reportData,
-    observations: observations.map((text, i) => ({
-      id: i + 1, description: text, photo_ref: `Photo ${i + 1}`
-    }))
+    observations: observations.map((text, i) => ({ id: i+1, description: text, photo_ref: `Photo ${i+1}` }))
   };
   document.getElementById('export-text-area').value = JSON.stringify(report, null, 2);
   showScreen('screen-export');
 }
-
 function copyToClipboard() {
   const text = document.getElementById('export-text-area').value;
   if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text)
-      .then(() => setStatus('copy-status', '✓ Copied to clipboard!', 'success'))
-      .catch(() => fallbackCopy());
+    navigator.clipboard.writeText(text).then(() => setStatus('copy-status', '✓ Copied!', 'success')).catch(fallbackCopy);
   } else { fallbackCopy(); }
 }
-
 function fallbackCopy() {
   const ta = document.getElementById('export-text-area');
   ta.select(); ta.setSelectionRange(0, 99999);
   try { document.execCommand('copy'); setStatus('copy-status', '✓ Copied!', 'success'); }
   catch(e) { setStatus('copy-status', 'Select all text above and copy manually.', 'error'); }
 }
-
 function confirmRestart() {
   if (confirm('Start a new report? Current data will be cleared.')) showScreen('screen-welcome');
 }
-
 function setStatus(id, msg, type) {
   const el = document.getElementById(id);
   el.textContent = msg;
