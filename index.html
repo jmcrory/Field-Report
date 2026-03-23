@@ -268,7 +268,7 @@ const FIELDS=[
 let curField=0,reportData={},observations=[],curObsPhoto=null;
 let recog=null,recogCtx=null,isListening=false,isWaiting=false,releasedEarly=false;
 let committed={fld:'',obs:''};
-let audioCtx=null,audioStream=null,audioAnalyser=null,audioRAF=null,micReadyFired=false;
+let micReadyTimer=null;
 
 // Voice
 const PREF=['Samantha (Enhanced)','Samantha','Aaron (Enhanced)','Aaron','Karen (Enhanced)','Karen','Daniel (Enhanced)','Daniel'];
@@ -353,69 +353,51 @@ function beginRec(ctx){
   if(!API)return;
   const el=getEl(ctx);
   committed[ctx]=el.tx.textContent.trim();
-  releasedEarly=false;isWaiting=true;micReadyFired=false;
+  releasedEarly=false;isWaiting=true;
   el.btn.classList.add('waiting');el.lbl.textContent='Starting…';
   setStatus(el.sid,'Getting ready…','warn');
   window.speechSynthesis&&window.speechSynthesis.cancel();
-  startAudioMonitor(ctx,el);
   recog=new API();recogCtx=ctx;recog.continuous=true;recog.interimResults=true;recog.lang='en-US';recog.maxAlternatives=1;
   recog.onstart=()=>{
     isWaiting=false;
-    if(releasedEarly){try{recog.stop();}catch(e){}stopAudioMonitor();el.btn.classList.remove('waiting');el.lbl.textContent='Hold to Record';setStatus(el.sid,'','');return;}
-    isListening=true;el.lbl.textContent='Waiting for sound…';
+    if(releasedEarly){
+      try{recog.stop();}catch(e){}
+      el.btn.classList.remove('waiting');el.lbl.textContent='Hold to Record';
+      setStatus(el.sid,'','');return;
+    }
+    isListening=true;
+    // Short delay to let iOS mic fully stabilize before signalling ready
+    micReadyTimer=setTimeout(()=>onMicReady(ctx,el),350);
   };
   recog.onresult=(e)=>{
+    // Also fire ready immediately if results arrive before the timer
     onMicReady(ctx,el);
     let txt='';for(let i=0;i<e.results.length;i++)txt+=e.results[i][0].transcript;
     const base=committed[ctx];el.tx.textContent=base?base+' '+txt:txt;
   };
   recog.onerror=(e)=>{
-    isWaiting=false;stopAudioMonitor();
+    isWaiting=false;clearTimeout(micReadyTimer);
     let msg='';
     if(e.error==='not-allowed'||e.error==='service-not-allowed')msg='Mic blocked. Tap AA → Website Settings → Microphone: Allow, then reload.';
     else if(e.error==='network')msg='Network error.';
     if(msg)setStatus(el.sid,msg,'err');
     resetMicUI(ctx);
   };
-  recog.onend=()=>{isWaiting=false;stopAudioMonitor();committed[ctx]=el.tx.textContent.trim();resetMicUI(ctx);};
-  try{recog.start();}catch(err){isWaiting=false;stopAudioMonitor();setStatus(el.sid,'Could not start. Try again.','err');resetMicUI(ctx);recog=null;}
+  recog.onend=()=>{isWaiting=false;clearTimeout(micReadyTimer);committed[ctx]=el.tx.textContent.trim();resetMicUI(ctx);};
+  try{recog.start();}catch(err){isWaiting=false;clearTimeout(micReadyTimer);setStatus(el.sid,'Could not start. Try again.','err');resetMicUI(ctx);recog=null;}
 }
-function stopRec(ctx){stopAudioMonitor();if(recog){try{recog.stop();}catch(e){}recog=null;}}
+function stopRec(ctx){if(recog){try{recog.stop();}catch(e){}recog=null;}}
 function resetMicUI(ctx){
-  isListening=false;recogCtx=null;micReadyFired=false;
+  isListening=false;recogCtx=null;clearTimeout(micReadyTimer);
   const el=getEl(ctx);
   el.btn.classList.remove('waiting','listening');el.lbl.textContent='Hold to Record';
   el.wave.classList.remove('on');el.box.classList.remove('waiting','listening');
   const s=document.getElementById(el.sid);if(!s.classList.contains('err')){s.textContent='';s.className='status';}
 }
-
-// Audio monitor
-function startAudioMonitor(ctx,el){
-  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)return;
-  navigator.mediaDevices.getUserMedia({audio:true,video:false}).then(stream=>{
-    audioStream=stream;
-    audioCtx=new(window.AudioContext||window.webkitAudioContext)();
-    const src=audioCtx.createMediaStreamSource(stream);
-    audioAnalyser=audioCtx.createAnalyser();audioAnalyser.fftSize=256;audioAnalyser.smoothingTimeConstant=0.4;
-    src.connect(audioAnalyser);
-    const data=new Uint8Array(audioAnalyser.frequencyBinCount);
-    function check(){
-      if(!audioAnalyser)return;
-      audioAnalyser.getByteFrequencyData(data);
-      let sum=0;const bins=Math.floor(data.length/2);for(let i=0;i<bins;i++)sum+=data[i];
-      if(sum/bins>12)onMicReady(ctx,el);else audioRAF=requestAnimationFrame(check);
-    }
-    audioRAF=requestAnimationFrame(check);
-  }).catch(()=>{});
-}
-function stopAudioMonitor(){
-  if(audioRAF){cancelAnimationFrame(audioRAF);audioRAF=null;}
-  audioAnalyser=null;
-  if(audioStream){audioStream.getTracks().forEach(t=>t.stop());audioStream=null;}
-  if(audioCtx){try{audioCtx.close();}catch(e){}audioCtx=null;}
-}
 function onMicReady(ctx,el){
-  if(micReadyFired)return;micReadyFired=true;stopAudioMonitor();
+  if(!isListening)return;
+  // Clear the timer so it doesn't fire twice
+  clearTimeout(micReadyTimer);
   el.btn.classList.remove('waiting');el.btn.classList.add('listening');
   el.lbl.textContent='Release to Stop';el.wave.classList.add('on');el.box.classList.add('listening');
   setStatus(el.sid,'🎙 Listening…','ok');
