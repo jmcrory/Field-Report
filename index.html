@@ -357,11 +357,26 @@ function startListening(ctx) {
 
   recog.onstart = () => {
     isListening = true;
-    el.btn.classList.add('listening');
-    el.label.textContent = 'Release to Stop';
-    el.indicator.classList.add('active');
-    el.box.classList.add('listening');
-    setStatus(el.status, 'Listening…', '');
+    // Short delay so iOS mic is fully open before user speaks
+    setTimeout(() => {
+      el.btn.classList.add('listening');
+      el.label.textContent = 'Release to Stop';
+      el.indicator.classList.add('active');
+      el.box.classList.add('listening');
+      setStatus(el.status, '🎙 Speak now…', 'success');
+      // Brief beep to signal ready
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.frequency.value = 880;
+        gain.gain.setValueAtTime(0.2, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.15);
+      } catch(e) {}
+    }, 500);
   };
 
   recog.onresult = (e) => {
@@ -418,7 +433,7 @@ function resetMicUI(ctx) {
   el.label.textContent = 'Hold to Record';
   el.indicator.classList.remove('active');
   el.box.classList.remove('listening');
-  if (document.getElementById(el.status).textContent === 'Listening…') {
+  if (['Listening…', '🎙 Speak now…'].includes(document.getElementById(el.status).textContent)) {
     setStatus(el.status, '', '');
   }
 }
