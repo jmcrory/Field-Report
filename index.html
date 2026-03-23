@@ -445,6 +445,13 @@ function getEl(ctx) {
   };
 }
 
+// Audio level detection state
+let audioContext = null;
+let audioStream = null;
+let audioAnalyser = null;
+let audioLevelRAF = null;
+let micReadyFired = false;
+
 function beginRecording(ctx) {
   const API = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!API) return;
@@ -453,13 +460,18 @@ function beginRecording(ctx) {
   committedText[ctx] = el.text.textContent.trim();
   releasedEarly = false;
   isWaiting = true;
+  micReadyFired = false;
 
-  // Show "initializing" state immediately on press
+  // Show waiting state immediately
   el.btn.classList.add('waiting');
   el.label.textContent = 'Starting…';
-  setStatus(el.statusId, 'Getting ready…', 'warning');
+  setStatus(el.statusId, 'Hold still — detecting mic…', 'warning');
 
   window.speechSynthesis && window.speechSynthesis.cancel();
+
+  // Start audio level monitoring in parallel with speech recognition.
+  // As soon as we detect real audio coming through, we flip to red "ready".
+  startAudioLevelMonitor(ctx, el);
 
   recog = new API();
   recogContext = ctx;
@@ -470,25 +482,23 @@ function beginRecording(ctx) {
 
   recog.onstart = () => {
     isWaiting = false;
-    // If user already released, stop immediately
     if (releasedEarly) {
       try { recog.stop(); } catch(e) {}
+      stopAudioLevelMonitor();
       el.btn.classList.remove('waiting');
       el.label.textContent = 'Hold to Record';
       setStatus(el.statusId, '', '');
       return;
     }
     isListening = true;
-    el.btn.classList.remove('waiting');
-    el.btn.classList.add('listening');
-    el.label.textContent = 'Release to Stop';
-    el.indicator.classList.add('active');
-    el.box.classList.add('listening');
-    setStatus(el.statusId, '🎙 Listening…', 'success');
-    playBeep();
+    // UI will flip to red once audio level monitor detects real sound
+    // but update label now so user knows recognition is running
+    el.label.textContent = 'Waiting for sound…';
   };
 
   recog.onresult = (e) => {
+    // Ensure UI is in listening state when results arrive
+    onMicReady(ctx, el);
     let sessionText = '';
     for (let i = 0; i < e.results.length; i++) {
       sessionText += e.results[i][0].transcript;
@@ -499,6 +509,7 @@ function beginRecording(ctx) {
 
   recog.onerror = (e) => {
     isWaiting = false;
+    stopAudioLevelMonitor();
     let msg = '';
     if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
       msg = 'Mic blocked. Tap AA → Website Settings → Microphone: Allow, then reload.';
@@ -511,6 +522,7 @@ function beginRecording(ctx) {
 
   recog.onend = () => {
     isWaiting = false;
+    stopAudioLevelMonitor();
     committedText[ctx] = el.text.textContent.trim();
     resetMicUI(ctx);
   };
@@ -518,19 +530,84 @@ function beginRecording(ctx) {
   try { recog.start(); }
   catch(err) {
     isWaiting = false;
+    stopAudioLevelMonitor();
     setStatus(el.statusId, 'Could not start recording. Try again.', 'error');
     resetMicUI(ctx);
     recog = null;
   }
 }
 
+// Uses getUserMedia + AnalyserNode to watch real audio levels.
+// Fires onMicReady() the moment ambient/voice audio comes through.
+function startAudioLevelMonitor(ctx, el) {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+  navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+    .then(stream => {
+      audioStream = stream;
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const source = audioContext.createMediaStreamSource(stream);
+      audioAnalyser = audioContext.createAnalyser();
+      audioAnalyser.fftSize = 256;
+      audioAnalyser.smoothingTimeConstant = 0.4;
+      source.connect(audioAnalyser);
+
+      const dataArray = new Uint8Array(audioAnalyser.frequencyBinCount);
+
+      function checkLevel() {
+        if (!audioAnalyser) return;
+        audioAnalyser.getByteFrequencyData(dataArray);
+        // Average the lower frequency bins (voice range)
+        let sum = 0;
+        const bins = Math.floor(dataArray.length / 2);
+        for (let i = 0; i < bins; i++) sum += dataArray[i];
+        const avg = sum / bins;
+
+        // Threshold: any meaningful audio activity (including ambient)
+        // 12 is low enough to catch ambient room noise
+        if (avg > 12) {
+          onMicReady(ctx, el);
+        } else {
+          audioLevelRAF = requestAnimationFrame(checkLevel);
+        }
+      }
+      audioLevelRAF = requestAnimationFrame(checkLevel);
+    })
+    .catch(() => {
+      // getUserMedia failed — fall back to just showing ready after recog.onstart
+    });
+}
+
+function stopAudioLevelMonitor() {
+  if (audioLevelRAF) { cancelAnimationFrame(audioLevelRAF); audioLevelRAF = null; }
+  if (audioAnalyser) { audioAnalyser = null; }
+  if (audioStream) { audioStream.getTracks().forEach(t => t.stop()); audioStream = null; }
+  if (audioContext) { try { audioContext.close(); } catch(e) {} audioContext = null; }
+}
+
+// Called the moment real audio is detected — flips button to red "ready to speak"
+function onMicReady(ctx, el) {
+  if (micReadyFired) return;
+  micReadyFired = true;
+  // Stop level monitoring — we don't need it anymore
+  if (audioLevelRAF) { cancelAnimationFrame(audioLevelRAF); audioLevelRAF = null; }
+  el.btn.classList.remove('waiting');
+  el.btn.classList.add('listening');
+  el.label.textContent = 'Release to Stop';
+  el.indicator.classList.add('active');
+  el.box.classList.add('listening');
+  setStatus(el.statusId, '🎙 Listening…', 'success');
+  playBeep();
+}
+
 function stopRecording(ctx) {
+  stopAudioLevelMonitor();
   if (recog) { try { recog.stop(); } catch(e) {} recog = null; }
 }
 
 function resetMicUI(ctx) {
   isListening = false;
   recogContext = null;
+  micReadyFired = false;
   const el = getEl(ctx);
   el.btn.classList.remove('waiting', 'listening');
   el.label.textContent = 'Hold to Record';
