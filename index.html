@@ -280,6 +280,8 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
+const PREP_DELAY_MS = 2000; // increase if first words are still being missed
+
 const FIELDS=[
   {key:'project_location',label:'Project Location',q:'Where is this project located?',hint:'e.g. address, building name, or area'},
   {key:'inspector_name',label:'Inspector Name',q:'What is the name of the inspector?',hint:'Full name or initials'},
@@ -333,7 +335,7 @@ function micDown(e,ctx){
     el.box.classList.remove('waiting');
     el.box.classList.add('listening');
     setStatus(el.sid,'🎙 Listening…','ok');
-  }, 750);
+  }, PREP_DELAY_MS);
 }
 
 function micUp(e,ctx){
