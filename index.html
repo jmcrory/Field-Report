@@ -450,7 +450,7 @@ function showScreen(id){
   document.getElementById(id).classList.add('active');
   window.scrollTo(0,0);
 }
-function startReport(){curField=0;reportData={};observations=[];renderField();showScreen('screen-field');setTimeout(()=>speak(FIELDS[0].q),600);}
+function startReport(){alert('startReport called');curField=0;reportData={};observations=[];renderField();showScreen('screen-field');setTimeout(()=>speak(FIELDS[0].q),600);}
 
 // ── FIELDS ───────────────────────────────────────────────────
 function renderField(){
