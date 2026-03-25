@@ -102,14 +102,12 @@
   .status.ok{color:var(--accent);}
   .status.warn{color:var(--warning);}
   .obs-footer{padding:20px 24px 36px;border-top:1px solid var(--border);}
-  #debug-panel{position:fixed;top:0;left:0;right:0;background:rgba(0,0,0,.85);color:#4eff91;font-family:var(--mono);font-size:11px;padding:8px 12px;z-index:9999;max-height:160px;overflow-y:auto;line-height:1.6;}
+
   @keyframes spin{to{transform:rotate(360deg);}}
   @keyframes pop{from{transform:scale(.5);opacity:0;}to{transform:scale(1);opacity:1;}}
 </style>
 </head>
 <body>
-
-<div id="debug-panel">🔍 Debug ready…</div>
 
 <!-- WELCOME -->
 <div class="screen active" id="screen-welcome">
@@ -299,22 +297,11 @@ let warmSession=false;
 let silentMode=false;
 let prepTimer=null;
 
-// ── DEBUG ────────────────────────────────────────────────────
-let dbgLines=[];
-function dbg(msg){
-  const t=new Date().toTimeString().split(' ')[0];
-  dbgLines.push(`[${t}] ${msg}`);
-  if(dbgLines.length>30)dbgLines.shift();
-  const p=document.getElementById('debug-panel');
-  if(p){p.innerHTML=dbgLines.join('<br>');p.scrollTop=p.scrollHeight;}
-}
-
 // ── MIC HANDLERS ─────────────────────────────────────────────
 function micDown(e,ctx){
   e.preventDefault();
-  if(capturing||preparing){dbg(`micDown blocked — capturing=${capturing} preparing=${preparing}`);return;}
+  if(capturing||preparing)return;
   preparing=true;
-  dbg(`micDown — prep started ctx=${ctx}`);
   const el=getEl(ctx);
   el.btn.classList.remove('listening');
   el.btn.classList.add('waiting');
@@ -326,7 +313,6 @@ function micDown(e,ctx){
     if(!preparing)return;
     preparing=false;
     capturing=true;
-    dbg('prep complete — now capturing');
     el.btn.classList.remove('waiting');
     el.btn.classList.add('listening');
     el.lbl.textContent='Release to Stop';
@@ -341,7 +327,6 @@ function micUp(e,ctx){
   e.preventDefault();
   const el=getEl(ctx);
   if(preparing){
-    dbg('micUp during prep — aborting');
     preparing=false;
     clearTimeout(prepTimer);
     stopSession();
@@ -355,7 +340,6 @@ function micUp(e,ctx){
   if(!capturing)return;
   capturing=false;
   committed[ctx]=el.tx.textContent.trim();
-  dbg(`micUp — committed: "${committed[ctx].slice(0,40)}"`);
   stopSession();
   el.btn.classList.remove('listening');
   el.lbl.textContent='Hold to Record';
@@ -373,7 +357,6 @@ function getEl(ctx){
 // ── SPEECH SESSION ───────────────────────────────────────────
 function startSession(ctx, el){
   const API=window.SpeechRecognition||window.webkitSpeechRecognition;
-  dbg(`startSession: API=${!!API} warmSession=${warmSession}`);
   if(!API||warmSession)return;
   warmSession=true;
   function launch(){
@@ -383,34 +366,30 @@ function startSession(ctx, el){
     recog.interimResults=true;
     recog.lang='en-US';
     recog.maxAlternatives=1;
-    recog.onstart=()=>dbg('recog.onstart ✓');
+    recog.onstart=()=>{};
     recog.onresult=(e)=>{
-      if(!capturing){dbg(`onresult ignored — not capturing (results=${e.results.length})`);return;}
+      if(!capturing)return;
       let txt='';
       for(let i=0;i<e.results.length;i++) txt+=e.results[i][0].transcript;
       const base=committed[ctx];
       el.tx.textContent=base?base+' '+txt:txt;
-      dbg(`transcript: "${txt.slice(0,50)}"`);
     };
     recog.onerror=(e)=>{
-      dbg(`recog.onerror: ${e.error}`);
       if(e.error==='not-allowed'||e.error==='service-not-allowed'){
         warmSession=false;
         setStatus(el.sid,'Mic blocked. Tap AA → Website Settings → Microphone: Allow, then reload.','err');
       }
     };
     recog.onend=()=>{
-      dbg(`recog.onend — warmSession=${warmSession}`);
       if(warmSession) setTimeout(launch,150);
     };
-    try{recog.start();dbg('recog.start() called');}
-    catch(err){dbg(`recog.start() threw: ${err.message}`);warmSession=false;}
+    try{recog.start();}
+    catch(err){warmSession=false;}
   }
   launch();
 }
 
 function stopSession(){
-  dbg('stopSession called');
   warmSession=false;
   capturing=false;
   if(recog){try{recog.stop();}catch(e){}recog=null;}
@@ -439,14 +418,11 @@ function speak(text){
 document.addEventListener('visibilitychange',()=>{
   if(document.hidden){
     if(warmSession){
-      dbg('page hidden — stopping mic');
       stopSession();
       preparing=false;
       capturing=false;
       clearTimeout(prepTimer);
     }
-  } else {
-    dbg('page visible — mic ready on next press');
   }
 });
 
@@ -518,7 +494,6 @@ function openObsModal(){
   setStatus('obs-status','','');
   document.getElementById('obs-modal').classList.add('active');
   stopSession();
-  dbg('obs modal open — mic idle, press to record');
   setTimeout(()=>speak('Describe what you observed.'),300);
 }
 function closeObsModal(){
