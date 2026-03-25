@@ -46,7 +46,7 @@
   .wave span:nth-child(5){height:6px;animation-delay:.05s;}
   @keyframes wv{0%,100%{transform:scaleY(.5);opacity:.5;}50%{transform:scaleY(1);opacity:1;}}
   .btn-mic{background:var(--accent-btn);color:var(--accent-btn-text);border:none;border-radius:100px;padding:20px 32px;font-size:15px;font-weight:700;font-family:'Syne',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 4px 16px rgba(53,69,90,.2);width:100%;-webkit-appearance:none;touch-action:none;user-select:none;-webkit-user-select:none;transition:background .15s,box-shadow .15s;}
-  .btn-mic.waiting{background:var(--warning);box-shadow:0 4px 16px rgba(183,134,11,.2);color:#fff;}
+  .btn-mic.waiting{background:#e6a817;box-shadow:0 4px 16px rgba(230,168,23,.35);color:#000;}
   .btn-mic.listening{background:var(--danger);box-shadow:0 4px 16px rgba(192,57,43,.2);color:#fff;}
   .btn-mic svg{width:20px;height:20px;flex-shrink:0;}
   .btn-row{display:flex;gap:12px;}
@@ -374,9 +374,7 @@ function startWarmSession(ctx,el){
     };
     recog.onend=()=>{
       dbg(`recog.onend — warmSession=${warmSession} capturing=${capturing}`);
-      // Only restart if we're still actively recording (button held)
-      if(warmSession && capturing) setTimeout(launch,150);
-      else warmSession=false;
+      if(warmSession) setTimeout(launch,150);
     };
     try{ recog.start(); dbg('recog.start() called'); }
     catch(err){ dbg(`recog.start() threw: ${err.message}`); warmSession=false; }
