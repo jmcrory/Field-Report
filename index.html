@@ -346,13 +346,14 @@ function startWarmSession(ctx,el){
   window.speechSynthesis&&window.speechSynthesis.cancel();
   warmSession=true;
   function launch(){
+    if(!warmSession)return; // guard: session was stopped before relaunch fired
     recog=new API();
     recogCtx=ctx;
     recog.continuous=true;
     recog.interimResults=true;
     recog.lang='en-US';
     recog.maxAlternatives=1;
-    recog.onstart=()=>dbg('recog.onstart fired ✓');
+    recog.onstart=()=>dbg('recog.onstart ✓');
     recog.onresult=(e)=>{
       dbg(`onresult capturing=${capturing} results=${e.results.length}`);
       if(!capturing)return;
@@ -370,8 +371,10 @@ function startWarmSession(ctx,el){
       }
     };
     recog.onend=()=>{
-      dbg(`recog.onend warmSession=${warmSession}`);
-      if(warmSession) setTimeout(launch,150);
+      dbg(`recog.onend — warmSession=${warmSession} capturing=${capturing}`);
+      // Only restart if we're still actively recording (button held)
+      if(warmSession && capturing) setTimeout(launch,150);
+      else warmSession=false;
     };
     try{ recog.start(); dbg('recog.start() called'); }
     catch(err){ dbg(`recog.start() threw: ${err.message}`); warmSession=false; }
@@ -397,6 +400,18 @@ function pickVoice(){
   const a=vs.find(v=>v.lang.startsWith('en'));if(a)chosenVoice=a;
 }
 if(window.speechSynthesis){window.speechSynthesis.onvoiceschanged=pickVoice;pickVoice();}
+
+// Page Visibility — kill mic when app is backgrounded, log when returning
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){
+    if(warmSession){
+      dbg('Page hidden — stopping mic session');
+      stopWarmSession();
+    }
+  } else {
+    dbg('Page visible — mic will start on next button press');
+  }
+});
 function speak(text){
   if(silentMode)return;
   if(!window.speechSynthesis)return;
@@ -443,7 +458,7 @@ function renderField(){
   committed.fld=ex;
   setStatus('fld-status','','');
   stopWarmSession();
-  setTimeout(()=>startWarmSession('fld',getEl('fld')),100);
+  dbg(`renderField: ${f.label} — mic idle, press to record`);
 }
 function clearField(){document.getElementById('fld-tx').textContent='';committed.fld='';delete reportData[FIELDS[curField].key];setStatus('fld-status','','');}
 function nextField(){
@@ -473,7 +488,7 @@ function openObsModal(){
   document.getElementById('obs-modal').classList.add('active');
   setTimeout(()=>speak('Describe what you observed.'),300);
   stopWarmSession();
-  setTimeout(()=>startWarmSession('obs',getEl('obs')),100);
+  dbg('obs modal open — mic idle, press to record');
 }
 function closeObsModal(){
   stopWarmSession();
