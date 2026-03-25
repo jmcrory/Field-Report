@@ -301,22 +301,13 @@ let silentMode=false;
 function micDown(e,ctx){
   e.preventDefault();
   if(capturing)return;
-  // Flush any accumulated interim text before we start a fresh capture
-  if(recog && warmSession){
-    try{ recog.stop(); }catch(err){}
-    recog=null;
-    warmSession=false;
-  }
   capturing=true;
-  committed[ctx]=''; // start fresh — don't carry old text
   const el=getEl(ctx);
-  // Clear the transcript box for a clean start on this hold
-  el.tx.textContent='';
   el.btn.classList.remove('waiting');el.btn.classList.add('listening');
   el.lbl.textContent='Release to Stop';
   el.wave.classList.add('on');el.box.classList.add('listening');
   setStatus(el.sid,'🎙 Listening…','ok');
-  startWarmSession(ctx,el);
+  if(!warmSession) startWarmSession(ctx,el);
 }
 function micUp(e,ctx){
   e.preventDefault();
@@ -353,7 +344,8 @@ function startWarmSession(ctx,el){
       if(!capturing)return;
       let txt='';
       for(let i=0;i<e.results.length;i++) txt+=e.results[i][0].transcript;
-      el.tx.textContent=txt;
+      const base=committed[ctx];
+      el.tx.textContent=base?base+' '+txt:txt;
     };
     recog.onerror=(e)=>{
       if(e.error==='not-allowed'||e.error==='service-not-allowed'){
@@ -434,7 +426,7 @@ function renderField(){
   committed.fld=ex;
   setStatus('fld-status','','');
   stopWarmSession();
-  // Don't auto-start warm session here — only start on mic press
+  setTimeout(()=>startWarmSession('fld',getEl('fld')),100);
 }
 function clearField(){document.getElementById('fld-tx').textContent='';committed.fld='';delete reportData[FIELDS[curField].key];setStatus('fld-status','','');}
 function nextField(){
@@ -464,7 +456,7 @@ function openObsModal(){
   document.getElementById('obs-modal').classList.add('active');
   setTimeout(()=>speak('Describe what you observed.'),300);
   stopWarmSession();
-  // Don't auto-start warm session — only start on mic press
+  setTimeout(()=>startWarmSession('obs',getEl('obs')),100);
 }
 function closeObsModal(){
   stopWarmSession();
