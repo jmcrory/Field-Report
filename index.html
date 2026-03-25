@@ -14,8 +14,7 @@
   :root {
     --bg:#e7e6de; --surface:#fff; --surface2:#f0efea;
     --border:#c8c7bf; --accent:#35455a; --accent-dim:#d0d6de;
-    --text:#38383b; --muted:#a8a6a1; --danger:#c0392b; --warning:#b7860b;
-    --accent-btn:#35455a; --accent-btn-text:#fff;
+    --text:#38383b; --muted:#a8a6a1; --danger:#c0392b; --warning:#e6a817;
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
   body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;min-height:100dvh;overflow-x:hidden;}
@@ -32,7 +31,7 @@
   .fld-q{font-size:28px;font-weight:700;line-height:1.15;letter-spacing:-.02em;color:var(--text);}
   .fld-hint{font-size:13px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:6px;}
   .tx-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;min-height:100px;font-size:16px;line-height:1.6;position:relative;transition:border-color .2s;}
-  .tx-box.waiting{border-color:var(--warning);box-shadow:0 0 0 3px rgba(183,134,11,.1);}
+  .tx-box.waiting{border-color:var(--warning);box-shadow:0 0 0 3px rgba(230,168,23,.15);}
   .tx-box.listening{border-color:var(--accent);box-shadow:0 0 0 3px rgba(53,69,90,.1);}
   .tx-text{outline:none;min-height:60px;color:var(--text);}
   [contenteditable]:empty:before{content:attr(data-placeholder);color:var(--muted);font-style:italic;pointer-events:none;}
@@ -45,9 +44,9 @@
   .wave span:nth-child(4){height:16px;animation-delay:.15s;}
   .wave span:nth-child(5){height:6px;animation-delay:.05s;}
   @keyframes wv{0%,100%{transform:scaleY(.5);opacity:.5;}50%{transform:scaleY(1);opacity:1;}}
-  .btn-mic{background:var(--accent-btn);color:var(--accent-btn-text);border:none;border-radius:100px;padding:20px 32px;font-size:15px;font-weight:700;font-family:'Syne',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 4px 16px rgba(53,69,90,.2);width:100%;-webkit-appearance:none;touch-action:none;user-select:none;-webkit-user-select:none;transition:background .15s,box-shadow .15s;}
-  .btn-mic.waiting{background:#e6a817;box-shadow:0 4px 16px rgba(230,168,23,.35);color:#000;}
-  .btn-mic.listening{background:var(--danger);box-shadow:0 4px 16px rgba(192,57,43,.2);color:#fff;}
+  .btn-mic{background:var(--accent);color:#fff;border:none;border-radius:100px;padding:20px 32px;font-size:15px;font-weight:700;font-family:'Syne',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 4px 16px rgba(53,69,90,.2);width:100%;-webkit-appearance:none;touch-action:none;user-select:none;-webkit-user-select:none;transition:background .15s,box-shadow .15s;}
+  .btn-mic.waiting{background:#e6a817;box-shadow:0 4px 16px rgba(230,168,23,.4);color:#000;}
+  .btn-mic.listening{background:var(--danger);box-shadow:0 4px 16px rgba(192,57,43,.25);color:#fff;}
   .btn-mic svg{width:20px;height:20px;flex-shrink:0;}
   .btn-row{display:flex;gap:12px;}
   .btn-sec{flex:1;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:100px;padding:16px;font-size:14px;font-weight:600;font-family:'Syne',sans-serif;cursor:pointer;text-align:center;-webkit-appearance:none;touch-action:manipulation;}
@@ -62,7 +61,6 @@
   .perm-btn{background:var(--accent);color:#fff;border:none;border-radius:100px;padding:18px 32px;font-size:16px;font-weight:800;font-family:'Syne',sans-serif;cursor:pointer;width:100%;touch-action:manipulation;-webkit-appearance:none;box-shadow:0 4px 16px rgba(53,69,90,.2);}
   .perm-btn:active{opacity:.85;}
   .perm-btn.granted{background:var(--surface2);color:var(--accent);box-shadow:none;border:1px solid var(--accent);}
-  /* Silent mode toggle */
   .silent-toggle{display:flex;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 18px;width:100%;}
   .silent-toggle-label{display:flex;flex-direction:column;gap:2px;}
   .silent-toggle-title{font-size:14px;font-weight:700;color:var(--text);}
@@ -111,6 +109,8 @@
 </head>
 <body>
 
+<div id="debug-panel">🔍 Debug ready…</div>
+
 <!-- WELCOME -->
 <div class="screen active" id="screen-welcome">
   <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:48px 32px;text-align:center;gap:28px;">
@@ -126,8 +126,6 @@
       <h1 style="font-size:32px;font-weight:800;letter-spacing:-.03em;line-height:1.1;color:var(--text);">Capture your<br>report by voice.</h1>
     </div>
     <p style="font-size:14px;color:var(--muted);line-height:1.7;font-family:'DM Mono',monospace;max-width:280px;">Hold the mic button while you speak, release when done. The app reads each prompt aloud.</p>
-
-    <!-- Silent mode toggle -->
     <div class="silent-toggle" style="max-width:340px;width:100%;">
       <div class="silent-toggle-label">
         <span class="silent-toggle-title">Silent Mode</span>
@@ -138,7 +136,6 @@
         <span class="toggle-slider"></span>
       </label>
     </div>
-
     <div style="width:100%;max-width:340px;display:flex;flex-direction:column;gap:10px;">
       <button class="perm-btn" id="perm-btn" onclick="requestMicPermission()">Allow Microphone Access</button>
       <div class="status" id="perm-status"></div>
@@ -169,8 +166,8 @@
     <div class="status" id="fld-status"></div>
     <button class="btn-clr" onclick="clearField()">✕ Clear answer</button>
     <button class="btn-mic" id="fld-mic"
-      onmousedown="micDown(event,'fld')" onmouseup="micUp(event,'fld')" onmouseleave="micUp(event,'fld')"
-      ontouchstart="micDown(event,'fld')" ontouchend="micUp(event,'fld')" ontouchcancel="micUp(event,'fld')">
+      ontouchstart="micDown(event,'fld')" ontouchend="micUp(event,'fld')" ontouchcancel="micUp(event,'fld')"
+      onmousedown="micDown(event,'fld')" onmouseup="micUp(event,'fld')" onmouseleave="micUp(event,'fld')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
         <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
@@ -214,8 +211,8 @@
     </div>
     <div class="status" id="obs-status"></div>
     <button class="btn-mic" id="obs-mic"
-      onmousedown="micDown(event,'obs')" onmouseup="micUp(event,'obs')" onmouseleave="micUp(event,'obs')"
-      ontouchstart="micDown(event,'obs')" ontouchend="micUp(event,'obs')" ontouchcancel="micUp(event,'obs')">
+      ontouchstart="micDown(event,'obs')" ontouchend="micUp(event,'obs')" ontouchcancel="micUp(event,'obs')"
+      onmousedown="micDown(event,'obs')" onmouseup="micUp(event,'obs')" onmouseleave="micUp(event,'obs')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
         <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
@@ -281,8 +278,6 @@
   </div>
 </div>
 
-<div id="debug-panel">🔍 Debug ready — waiting for mic activity…</div>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
 const FIELDS=[
@@ -293,14 +288,16 @@ const FIELDS=[
   {key:'site_contact',label:'Site Contact',q:'Who is the site contact or client name?',hint:'Name and role if known'},
 ];
 
-let curField=0,reportData={},observations=[],curObsPhoto=null;
-let recog=null,recogCtx=null;
+let curField=0, reportData={}, observations=[], curObsPhoto=null;
+let recog=null;
 let committed={fld:'',obs:''};
-let capturing=false;
-let preparing=false;
+let capturing=false;   // true only during active recording (after prep delay)
+let preparing=false;   // true during the 750ms flush window
 let warmSession=false;
 let silentMode=false;
 let prepTimer=null;
+
+// ── DEBUG ────────────────────────────────────────────────────
 let dbgLines=[];
 function dbg(msg){
   const t=new Date().toTimeString().split(' ')[0];
@@ -313,24 +310,56 @@ function dbg(msg){
 // ── MIC HANDLERS ─────────────────────────────────────────────
 function micDown(e,ctx){
   e.preventDefault();
-  if(capturing)return;
-  capturing=true;
+  if(capturing||preparing){dbg(`micDown blocked — capturing=${capturing} preparing=${preparing}`);return;}
+  preparing=true;
+  dbg(`micDown — prep started ctx=${ctx}`);
   const el=getEl(ctx);
-  el.btn.classList.remove('waiting');el.btn.classList.add('listening');
-  el.lbl.textContent='Release to Stop';
-  el.wave.classList.add('on');el.box.classList.add('listening');
-  setStatus(el.sid,'🎙 Listening…','ok');
-  if(!warmSession) startWarmSession(ctx,el);
+  el.btn.classList.remove('listening');
+  el.btn.classList.add('waiting');
+  el.lbl.textContent='Preparing…';
+  el.box.classList.add('waiting');
+  setStatus(el.sid,'⏳ Preparing mic…','warn');
+  // Start session now with capturing=false — flushes stale buffer silently
+  startSession(ctx, el);
+  prepTimer=setTimeout(()=>{
+    if(!preparing)return; // released early
+    preparing=false;
+    capturing=true;
+    dbg('prep complete — now capturing');
+    el.btn.classList.remove('waiting');
+    el.btn.classList.add('listening');
+    el.lbl.textContent='Release to Stop';
+    el.wave.classList.add('on');
+    el.box.classList.remove('waiting');
+    el.box.classList.add('listening');
+    setStatus(el.sid,'🎙 Listening…','ok');
+  }, 750);
 }
+
 function micUp(e,ctx){
   e.preventDefault();
+  const el=getEl(ctx);
+  if(preparing){
+    dbg('micUp during prep — aborting');
+    preparing=false;
+    clearTimeout(prepTimer);
+    stopSession();
+    el.btn.classList.remove('waiting','listening');
+    el.lbl.textContent='Hold to Record';
+    el.wave.classList.remove('on');
+    el.box.classList.remove('waiting','listening');
+    setStatus(el.sid,'','');
+    return;
+  }
   if(!capturing)return;
   capturing=false;
-  const el=getEl(ctx);
-  // Commit whatever is currently displayed
   committed[ctx]=el.tx.textContent.trim();
-  el.btn.classList.remove('listening');el.lbl.textContent='Hold to Record';
-  el.wave.classList.remove('on');el.box.classList.remove('listening');
+  dbg(`micUp — committed: "${committed[ctx].slice(0,40)}"`);
+  stopSession();
+  el.btn.classList.remove('listening');
+  el.lbl.textContent='Hold to Record';
+  el.wave.classList.remove('on');
+  el.box.classList.remove('listening');
   setStatus(el.sid,'','');
 }
 
@@ -340,25 +369,22 @@ function getEl(ctx){
     :{btn:document.getElementById('obs-mic'),lbl:document.getElementById('obs-mic-lbl'),wave:document.getElementById('obs-wave'),box:document.getElementById('obs-tx-box'),tx:document.getElementById('obs-tx'),sid:'obs-status'};
 }
 
-// ── WARM SESSION ─────────────────────────────────────────────
-function startWarmSession(ctx,el){
+// ── SPEECH SESSION ───────────────────────────────────────────
+function startSession(ctx, el){
   const API=window.SpeechRecognition||window.webkitSpeechRecognition;
-  dbg(`startWarmSession: API=${!!API} warmSession=${warmSession}`);
+  dbg(`startSession: API=${!!API} warmSession=${warmSession}`);
   if(!API||warmSession)return;
-  window.speechSynthesis&&window.speechSynthesis.cancel();
   warmSession=true;
   function launch(){
-    if(!warmSession)return; // guard: session was stopped before relaunch fired
+    if(!warmSession)return;
     recog=new API();
-    recogCtx=ctx;
     recog.continuous=true;
     recog.interimResults=true;
     recog.lang='en-US';
     recog.maxAlternatives=1;
     recog.onstart=()=>dbg('recog.onstart ✓');
     recog.onresult=(e)=>{
-      dbg(`onresult capturing=${capturing} results=${e.results.length}`);
-      if(!capturing)return;
+      if(!capturing){dbg(`onresult ignored — not capturing (results=${e.results.length})`);return;}
       let txt='';
       for(let i=0;i<e.results.length;i++) txt+=e.results[i][0].transcript;
       const base=committed[ctx];
@@ -373,22 +399,23 @@ function startWarmSession(ctx,el){
       }
     };
     recog.onend=()=>{
-      dbg(`recog.onend — warmSession=${warmSession} capturing=${capturing}`);
+      dbg(`recog.onend — warmSession=${warmSession}`);
       if(warmSession) setTimeout(launch,150);
     };
-    try{ recog.start(); dbg('recog.start() called'); }
-    catch(err){ dbg(`recog.start() threw: ${err.message}`); warmSession=false; }
+    try{recog.start();dbg('recog.start() called');}
+    catch(err){dbg(`recog.start() threw: ${err.message}`);warmSession=false;}
   }
   launch();
 }
 
-function stopWarmSession(){
+function stopSession(){
+  dbg('stopSession called');
   warmSession=false;
   capturing=false;
   if(recog){try{recog.stop();}catch(e){}recog=null;}
 }
 
-// Voice
+// ── VOICE ────────────────────────────────────────────────────
 const PREF=['Samantha (Enhanced)','Samantha','Aaron (Enhanced)','Aaron','Karen (Enhanced)','Karen','Daniel (Enhanced)','Daniel'];
 let chosenVoice=null;
 function pickVoice(){
@@ -400,18 +427,6 @@ function pickVoice(){
   const a=vs.find(v=>v.lang.startsWith('en'));if(a)chosenVoice=a;
 }
 if(window.speechSynthesis){window.speechSynthesis.onvoiceschanged=pickVoice;pickVoice();}
-
-// Page Visibility — kill mic when app is backgrounded, log when returning
-document.addEventListener('visibilitychange',()=>{
-  if(document.hidden){
-    if(warmSession){
-      dbg('Page hidden — stopping mic session');
-      stopWarmSession();
-    }
-  } else {
-    dbg('Page visible — mic will start on next button press');
-  }
-});
 function speak(text){
   if(silentMode)return;
   if(!window.speechSynthesis)return;
@@ -419,7 +434,22 @@ function speak(text){
   setTimeout(()=>{pickVoice();const u=new SpeechSynthesisUtterance(text);if(chosenVoice)u.voice=chosenVoice;u.rate=0.88;u.pitch=1;u.volume=1;window.speechSynthesis.speak(u);},150);
 }
 
-// Permission
+// ── PAGE VISIBILITY ──────────────────────────────────────────
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){
+    if(warmSession){
+      dbg('page hidden — stopping mic');
+      stopSession();
+      preparing=false;
+      capturing=false;
+      clearTimeout(prepTimer);
+    }
+  } else {
+    dbg('page visible — mic ready on next press');
+  }
+});
+
+// ── PERMISSION ───────────────────────────────────────────────
 function requestMicPermission(){
   const API=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!API){setStatus('perm-status','Not supported.','err');return;}
@@ -436,7 +466,7 @@ function onPermGranted(){
   const s=document.getElementById('start-btn');s.style.opacity='1';s.style.pointerEvents='auto';
 }
 
-// Nav
+// ── NAV ──────────────────────────────────────────────────────
 function showScreen(id){
   if(id==='screen-review')buildReview();
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
@@ -445,7 +475,7 @@ function showScreen(id){
 }
 function startReport(){curField=0;reportData={};observations=[];renderField();showScreen('screen-field');setTimeout(()=>speak(FIELDS[0].q),600);}
 
-// Fields
+// ── FIELDS ───────────────────────────────────────────────────
 function renderField(){
   const f=FIELDS[curField];
   document.getElementById('fld-name').textContent=f.label;
@@ -457,27 +487,27 @@ function renderField(){
   document.getElementById('fld-tx').textContent=ex;
   committed.fld=ex;
   setStatus('fld-status','','');
-  stopWarmSession();
-  dbg(`renderField: ${f.label} — mic idle, press to record`);
+  stopSession();
+  dbg(`renderField: "${f.label}" — mic idle, press to record`);
 }
 function clearField(){document.getElementById('fld-tx').textContent='';committed.fld='';delete reportData[FIELDS[curField].key];setStatus('fld-status','','');}
 function nextField(){
   const t=document.getElementById('fld-tx').textContent.trim();
   if(t)reportData[FIELDS[curField].key]=t;
-  stopWarmSession();
+  stopSession();
   curField++;
   if(curField>=FIELDS.length){renderObs();showScreen('screen-obs');setTimeout(()=>speak('Now add your observations. Tap the plus button to begin.'),500);return;}
   renderField();setTimeout(()=>speak(FIELDS[curField].q),300);
 }
 function skipField(){
-  stopWarmSession();
+  stopSession();
   curField++;
   if(curField>=FIELDS.length){renderObs();showScreen('screen-obs');return;}
   renderField();setTimeout(()=>speak(FIELDS[curField].q),300);
 }
-function goBackToFields(){stopWarmSession();curField=FIELDS.length-1;renderField();showScreen('screen-field');}
+function goBackToFields(){stopSession();curField=FIELDS.length-1;renderField();showScreen('screen-field');}
 
-// Observations
+// ── OBSERVATIONS ─────────────────────────────────────────────
 function openObsModal(){
   document.getElementById('obs-tx').textContent='';committed.obs='';curObsPhoto=null;
   document.getElementById('obs-photo-prev').style.display='none';
@@ -486,12 +516,12 @@ function openObsModal(){
   document.getElementById('obs-photo-input').value='';
   setStatus('obs-status','','');
   document.getElementById('obs-modal').classList.add('active');
-  setTimeout(()=>speak('Describe what you observed.'),300);
-  stopWarmSession();
+  stopSession();
   dbg('obs modal open — mic idle, press to record');
+  setTimeout(()=>speak('Describe what you observed.'),300);
 }
 function closeObsModal(){
-  stopWarmSession();
+  stopSession();
   document.getElementById('obs-modal').classList.remove('active');
 }
 function saveObs(){
@@ -528,7 +558,7 @@ function renderObs(){
 }
 function delObs(i){observations.splice(i,1);renderObs();}
 
-// Review
+// ── REVIEW ───────────────────────────────────────────────────
 function buildReview(){
   let html='<div><div class="rev-sec-lbl">Report Fields</div>';
   FIELDS.forEach(f=>{
@@ -549,7 +579,7 @@ function buildReview(){
   document.getElementById('rev-body').innerHTML=html;
 }
 
-// Export
+// ── EXPORT ───────────────────────────────────────────────────
 async function exportReport(){
   showScreen('screen-export');
   const msg=document.getElementById('exp-msg');
