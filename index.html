@@ -297,8 +297,10 @@ let curField=0,reportData={},observations=[],curObsPhoto=null;
 let recog=null,recogCtx=null;
 let committed={fld:'',obs:''};
 let capturing=false;
+let preparing=false;
 let warmSession=false;
 let silentMode=false;
+let prepTimer=null;
 let dbgLines=[];
 function dbg(msg){
   const t=new Date().toTimeString().split(' ')[0];
