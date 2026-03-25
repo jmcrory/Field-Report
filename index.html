@@ -586,15 +586,10 @@ function confirmRestart(){
     preparing=false;
     capturing=false;
     clearTimeout(prepTimer);
-    const s=document.getElementById('start-btn');
-    s.style.opacity='0.25';
-    s.style.pointerEvents='none';
-    const b=document.getElementById('perm-btn');
-    b.textContent='Allow Microphone Access';
-    b.classList.remove('granted');
-    b.onclick=requestMicPermission;
-    setStatus('perm-status','','');
+    curField=0;reportData={};observations=[];
     showScreen('screen-welcome');
+    // If mic was already granted, re-enable the start button immediately
+    onPermGranted();
   }
 }
 function setStatus(id,msg,type){const el=document.getElementById(id);el.textContent=msg;el.className='status'+(type?' '+type:'');}
