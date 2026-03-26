@@ -465,7 +465,7 @@ function renderField(){
   committed.fld=ex;
   setStatus('fld-status','','');
   stopSession();
-  dbg(`renderField: "${f.label}" — mic idle, press to record`);
+
 }
 function clearField(){document.getElementById('fld-tx').textContent='';committed.fld='';delete reportData[FIELDS[curField].key];setStatus('fld-status','','');}
 function nextField(){
