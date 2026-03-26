@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Field Report">
-<!-- v8 -->
+<!-- v9 -->
 <title>Field Report</title>
 <style>
   :root {
@@ -28,12 +28,12 @@
   .prog-fill{height:100%;background:#fff;border-radius:2px;transition:width .4s cubic-bezier(.4,0,.2,1);}
   .step-ctr{font-size:11px;font-family:var(--mono);color:rgba(255,255,255,0.6);}
   .fld-body{flex:1;display:flex;flex-direction:column;padding:32px 24px 24px;gap:24px;overflow-y:auto;}
-  .fld-q{font-size:28px;font-weight:700;line-height:1.15;letter-spacing:-.02em;color:var(--text);}
+  .fld-q{font-size:26px;font-weight:700;line-height:1.15;letter-spacing:-.02em;color:var(--text);}
   .fld-hint{font-size:13px;color:var(--muted);font-family:var(--mono);margin-top:6px;}
-  .tx-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;min-height:100px;font-size:16px;line-height:1.6;position:relative;transition:border-color .2s;}
+  .tx-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;min-height:80px;font-size:16px;line-height:1.6;position:relative;transition:border-color .2s;}
   .tx-box.waiting{border-color:var(--warning);box-shadow:0 0 0 3px rgba(230,168,23,.15);}
   .tx-box.listening{border-color:var(--accent);box-shadow:0 0 0 3px rgba(53,69,90,.1);}
-  .tx-text{outline:none;min-height:60px;color:var(--text);}
+  .tx-text{outline:none;min-height:48px;color:var(--text);}
   [contenteditable]:empty:before{content:attr(data-placeholder);color:var(--muted);font-style:italic;pointer-events:none;}
   .wave{display:none;align-items:center;gap:4px;position:absolute;top:14px;right:14px;}
   .wave.on{display:flex;}
@@ -48,6 +48,8 @@
   .btn-mic.waiting{background:#e6a817;box-shadow:0 4px 16px rgba(230,168,23,.4);color:#000;}
   .btn-mic.listening{background:var(--danger);box-shadow:0 4px 16px rgba(192,57,43,.25);color:#fff;}
   .btn-mic svg{width:20px;height:20px;flex-shrink:0;}
+  .btn-mic.sm{padding:12px 20px;font-size:13px;}
+  .btn-mic.sm svg{width:16px;height:16px;}
   .btn-row{display:flex;gap:12px;}
   .btn-sec{flex:1;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:100px;padding:16px;font-size:14px;font-weight:600;font-family:var(--sans);cursor:pointer;text-align:center;-webkit-appearance:none;touch-action:manipulation;}
   .btn-sec:active{background:var(--surface2);}
@@ -55,6 +57,8 @@
   .btn-nxt:active{opacity:.8;}
   .btn-clr{background:none;border:1px solid var(--border);border-radius:100px;padding:10px 18px;font-size:12px;font-family:var(--mono);color:var(--muted);cursor:pointer;touch-action:manipulation;align-self:flex-start;}
   .btn-clr:active{background:var(--surface2);color:var(--danger);border-color:var(--danger);}
+  .btn-today{background:var(--accent-dim);border:1px solid var(--accent);border-radius:100px;padding:10px 18px;font-size:12px;font-family:var(--mono);color:var(--accent);cursor:pointer;touch-action:manipulation;font-weight:600;}
+  .btn-today:active{background:var(--accent);color:#fff;}
   .btn-exp{background:var(--accent);color:#fff;border:none;border-radius:100px;padding:18px;font-size:16px;font-weight:800;font-family:var(--sans);cursor:pointer;text-align:center;box-shadow:0 4px 16px rgba(53,69,90,.2);width:100%;-webkit-appearance:none;touch-action:manipulation;}
   .btn-exp:active{opacity:.85;}
   .btn-rst{background:none;border:1px solid var(--border);color:var(--muted);font-size:13px;font-family:var(--sans);font-weight:600;cursor:pointer;text-align:center;padding:10px 24px;border-radius:100px;touch-action:manipulation;}
@@ -75,18 +79,23 @@
   .obs-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;display:flex;gap:14px;align-items:flex-start;animation:sldn .3s ease;}
   @keyframes sldn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
   .obs-num{font-family:var(--mono);font-size:11px;color:var(--accent);background:var(--accent-dim);border-radius:6px;padding:3px 7px;flex-shrink:0;margin-top:2px;}
-  .obs-text{font-size:14px;line-height:1.55;flex:1;}
+  .obs-card-body{flex:1;display:flex;flex-direction:column;gap:6px;}
+  .obs-card-label{font-size:10px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.08em;}
+  .obs-text{font-size:14px;line-height:1.55;}
+  .obs-followup{font-size:13px;line-height:1.5;color:var(--accent);font-style:italic;}
   .obs-del{background:none;border:none;color:var(--muted);cursor:pointer;padding:2px;font-size:18px;line-height:1;flex-shrink:0;touch-action:manipulation;}
   .obs-empty{text-align:center;color:var(--muted);font-size:14px;font-family:var(--mono);padding:32px 0;}
   .obs-add{background:var(--surface);border:1px dashed var(--border);border-radius:14px;padding:16px;color:var(--accent);font-size:14px;font-weight:600;font-family:var(--sans);cursor:pointer;text-align:center;width:100%;-webkit-appearance:none;touch-action:manipulation;}
   .obs-add:active{background:var(--accent-dim);}
+  .obs-card-photos{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;}
   .obs-card-photo{width:44px;height:44px;border-radius:8px;object-fit:cover;border:1px solid var(--border);}
-  .photo-picker{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
-  .photo-picker input[type="file"]{display:none;}
-  .btn-photo{background:var(--surface2);border:1px dashed var(--border);border-radius:12px;padding:12px 16px;font-size:13px;font-weight:600;font-family:var(--sans);color:var(--muted);cursor:pointer;touch-action:manipulation;display:flex;align-items:center;gap:8px;flex-shrink:0;}
-  .btn-photo:active{border-color:var(--accent);color:var(--accent);}
-  .photo-prev{width:52px;height:52px;border-radius:10px;object-fit:cover;border:1px solid var(--border);display:none;flex-shrink:0;}
-  .photo-fname{font-size:11px;font-family:var(--mono);color:var(--accent);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .photo-grid{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+  .photo-grid input[type="file"]{display:none;}
+  .photo-thumb-wrap{position:relative;width:56px;height:56px;}
+  .photo-thumb{width:56px;height:56px;border-radius:10px;object-fit:cover;border:1px solid var(--border);}
+  .photo-thumb-del{position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--danger);color:#fff;border:none;font-size:12px;line-height:18px;text-align:center;cursor:pointer;padding:0;}
+  .btn-add-photo{background:var(--surface2);border:1px dashed var(--border);border-radius:12px;width:56px;height:56px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:24px;flex-shrink:0;touch-action:manipulation;}
+  .btn-add-photo:active{border-color:var(--accent);color:var(--accent);}
   .rev-body{flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:20px;}
   .rev-sec-lbl{font-size:10px;font-family:var(--mono);color:var(--accent);letter-spacing:.15em;text-transform:uppercase;margin-bottom:10px;}
   .rev-fld{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:4px;margin-bottom:10px;}
@@ -94,15 +103,15 @@
   .rev-fld-val{font-size:15px;line-height:1.5;}
   .modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;align-items:flex-end;}
   .modal-ov.active{display:flex;}
-  .modal-sheet{background:var(--surface);border-radius:24px 24px 0 0;padding:24px 24px 44px;width:100%;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:16px;animation:shup .3s cubic-bezier(.4,0,.2,1);}
+  .modal-sheet{background:var(--surface);border-radius:24px 24px 0 0;padding:24px 24px 44px;width:100%;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:16px;animation:shup .3s cubic-bezier(.4,0,.2,1);max-height:90vh;overflow-y:auto;}
   @keyframes shup{from{transform:translateY(100%);}to{transform:translateY(0);}}
   .modal-title{font-size:18px;font-weight:700;color:var(--text);}
+  .modal-section-lbl{font-size:11px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.1em;}
   .status{font-size:12px;font-family:var(--mono);color:var(--muted);text-align:center;min-height:18px;line-height:1.5;}
   .status.err{color:var(--danger);}
   .status.ok{color:var(--accent);}
   .status.warn{color:var(--warning);}
   .obs-footer{padding:20px 24px 36px;border-top:1px solid var(--border);}
-
   @keyframes spin{to{transform:rotate(360deg);}}
   @keyframes pop{from{transform:scale(.5);opacity:0;}to{transform:scale(1);opacity:1;}}
 </style>
@@ -147,16 +156,18 @@
   <div class="hdr">
     <div class="hdr-top">
       <span class="app-lbl">Field Report</span>
-      <span class="step-ctr" id="step-ctr">1 / 5</span>
+      <span class="step-ctr" id="step-ctr">1 / 13</span>
     </div>
-    <h1 id="fld-name">Project Location</h1>
-    <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:20%"></div></div>
+    <h1 id="fld-name">Report #</h1>
+    <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:8%"></div></div>
   </div>
   <div class="fld-body">
     <div>
-      <div class="fld-q" id="fld-q">Where is this project located?</div>
-      <div class="fld-hint" id="fld-hint">e.g. address, building name, or area</div>
+      <div class="fld-q" id="fld-q"></div>
+      <div class="fld-hint" id="fld-hint"></div>
     </div>
+    <!-- Today / Now shortcut button (shown only for date/time fields) -->
+    <button class="btn-today" id="fld-shortcut" style="display:none;" onclick="fillShortcut()"></button>
     <div class="tx-box" id="fld-tx-box">
       <div class="wave" id="fld-wave"><span></span><span></span><span></span><span></span><span></span></div>
       <div class="tx-text" id="fld-tx" contenteditable="true" data-placeholder="Hold the mic and speak, or type here..."></div>
@@ -187,7 +198,7 @@
     <h1>Observations</h1>
   </div>
   <div style="flex:1;padding:24px;display:flex;flex-direction:column;gap:20px;overflow-y:auto;">
-    <div style="font-size:13px;color:var(--muted);font-family:var(--mono);">Add each item you observed. Each will be numbered and referenced in the final report.</div>
+    <div style="font-size:13px;color:var(--muted);font-family:var(--mono);">Add each item observed. Each will be numbered in the final report.</div>
     <div class="obs-list" id="obs-list"><div class="obs-empty">No observations yet.<br>Tap below to add one.</div></div>
     <button class="obs-add" onclick="openObsModal()">+ Add Observation</button>
   </div>
@@ -203,12 +214,13 @@
 <div class="modal-ov" id="obs-modal">
   <div class="modal-sheet">
     <div class="modal-title">New Observation</div>
+
+    <div class="modal-section-lbl">Item of Note</div>
     <div class="tx-box" id="obs-tx-box">
       <div class="wave" id="obs-wave"><span></span><span></span><span></span><span></span><span></span></div>
       <div class="tx-text" id="obs-tx" contenteditable="true" data-placeholder="Hold the mic and describe what you observed..."></div>
     </div>
-    <div class="status" id="obs-status"></div>
-    <button class="btn-mic" id="obs-mic"
+    <button class="btn-mic sm" id="obs-mic"
       ontouchstart="micDown(event,'obs')" ontouchend="micUp(event,'obs')" ontouchcancel="micUp(event,'obs')"
       onmousedown="micDown(event,'obs')" onmouseup="micUp(event,'obs')" onmouseleave="micUp(event,'obs')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -218,17 +230,32 @@
       </svg>
       <span id="obs-mic-lbl">Hold to Record</span>
     </button>
-    <div class="photo-picker">
-      <input type="file" id="obs-photo-input" accept="image/*" onchange="photoSelected(event)">
-      <button class="btn-photo" onclick="document.getElementById('obs-photo-input').click()">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-        Attach Photo
-      </button>
-      <img id="obs-photo-prev" class="photo-prev" alt="preview">
-      <span class="photo-fname" id="obs-photo-fname"></span>
-      <button id="obs-photo-clr" style="display:none;background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:4px;" onclick="clearObsPhoto()">×</button>
+    <div class="status" id="obs-status"></div>
+
+    <div class="modal-section-lbl">Follow-Up / Action Required</div>
+    <div class="tx-box" id="fu-tx-box">
+      <div class="wave" id="fu-wave"><span></span><span></span><span></span><span></span><span></span></div>
+      <div class="tx-text" id="fu-tx" contenteditable="true" data-placeholder="Hold the mic to record follow-up action..."></div>
     </div>
-    <div class="btn-row">
+    <button class="btn-mic sm" id="fu-mic"
+      ontouchstart="micDown(event,'fu')" ontouchend="micUp(event,'fu')" ontouchcancel="micUp(event,'fu')"
+      onmousedown="micDown(event,'fu')" onmouseup="micUp(event,'fu')" onmouseleave="micUp(event,'fu')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
+        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+        <line x1="12" y1="19" x2="12" y2="22"/>
+      </svg>
+      <span id="fu-mic-lbl">Hold to Record</span>
+    </button>
+    <div class="status" id="fu-status"></div>
+
+    <div class="modal-section-lbl">Photos</div>
+    <input type="file" id="obs-photo-input" accept="image/*" onchange="photoSelected(event)">
+    <div class="photo-grid" id="obs-photo-grid">
+      <button class="btn-add-photo" onclick="document.getElementById('obs-photo-input').click()">+</button>
+    </div>
+
+    <div class="btn-row" style="margin-top:8px;">
       <button class="btn-sec" onclick="closeObsModal()">Cancel</button>
       <button class="btn-nxt" onclick="saveObs()">Add →</button>
     </div>
@@ -281,26 +308,38 @@
 const PREP_DELAY_MS = 2500; // increase if first words are still being missed
 
 const FIELDS=[
-  {key:'project_location',label:'Project Location',q:'Where is this project located?',hint:'e.g. address, building name, or area'},
-  {key:'inspector_name',label:'Inspector Name',q:'What is the name of the inspector?',hint:'Full name or initials'},
-  {key:'inspection_date',label:'Inspection Date',q:'What is today\'s date?',hint:'e.g. March 22, 2026'},
-  {key:'weather',label:'Weather',q:'What are the current weather conditions?',hint:'e.g. clear, overcast, raining'},
-  {key:'site_contact',label:'Site Contact',q:'Who is the site contact or client name?',hint:'Name and role if known'},
+  {key:'report_number',    label:'Report #',           q:'What is the report number?',                   hint:'e.g. 2026-001'},
+  {key:'project_name',     label:'Project Name',        q:'What is the project name?',                    hint:'Full project name'},
+  {key:'project_number',   label:'Project Number',      q:'What is the project number?',                  hint:'e.g. PRJ-2026-042'},
+  {key:'location',         label:'Location',            q:'Where is this project located?',               hint:'Address, building name, or area'},
+  {key:'date',             label:'Date',                q:'What is the date of this inspection?',         hint:'e.g. March 25, 2026', shortcut:'today'},
+  {key:'time',             label:'Time',                q:'What is the time of this inspection?',         hint:'e.g. 9:30 AM', shortcut:'now'},
+  {key:'weather',          label:'Weather',             q:'What are the current weather conditions?',     hint:'e.g. clear, overcast, raining'},
+  {key:'architect',        label:'Architect',           q:'What is the architect company name?',          hint:'Company name'},
+  {key:'contractor',       label:'Contractor',          q:'What is the contractor company name?',         hint:'Company name'},
+  {key:'observer',         label:'Observer',            q:'Who is the observer?',                         hint:'Full name'},
+  {key:'persons_present',  label:'Persons Present',     q:'Who was present during the inspection?',       hint:'Names and roles'},
+  {key:'prepared_by',      label:'Report Prepared By',  q:'Who is preparing this report?',                hint:'Full name'},
+  {key:'reviewed_by',      label:'Report Reviewed By',  q:'Who will review this report?',                 hint:'Full name'},
 ];
 
-let curField=0, reportData={}, observations=[], curObsPhoto=null;
+let curField=0, reportData={}, observations=[], curObsPhotos=[];
 let recog=null;
-let committed={fld:'',obs:''};
+let committed={fld:'',obs:'',fu:''};
 let capturing=false;
 let preparing=false;
 let warmSession=false;
 let silentMode=false;
 let prepTimer=null;
+let activeCtx=null; // tracks which context ('fld','obs','fu') is active
 
 // ── MIC HANDLERS ─────────────────────────────────────────────
 function micDown(e,ctx){
   e.preventDefault();
   if(capturing||preparing)return;
+  // Stop any other active context first
+  if(activeCtx && activeCtx!==ctx) stopSession();
+  activeCtx=ctx;
   preparing=true;
   const el=getEl(ctx);
   el.btn.classList.remove('listening');
@@ -340,6 +379,11 @@ function micUp(e,ctx){
   if(!capturing)return;
   capturing=false;
   committed[ctx]=el.tx.textContent.trim();
+  // Auto-replace "today" with actual date for date field
+  if(ctx==='fld' && FIELDS[curField].shortcut==='today'){
+    committed[ctx]=replaceTodayNow(committed[ctx],'today');
+    el.tx.textContent=committed[ctx];
+  }
   stopSession();
   el.btn.classList.remove('listening');
   el.lbl.textContent='Hold to Record';
@@ -349,9 +393,9 @@ function micUp(e,ctx){
 }
 
 function getEl(ctx){
-  return ctx==='fld'
-    ?{btn:document.getElementById('fld-mic'),lbl:document.getElementById('fld-mic-lbl'),wave:document.getElementById('fld-wave'),box:document.getElementById('fld-tx-box'),tx:document.getElementById('fld-tx'),sid:'fld-status'}
-    :{btn:document.getElementById('obs-mic'),lbl:document.getElementById('obs-mic-lbl'),wave:document.getElementById('obs-wave'),box:document.getElementById('obs-tx-box'),tx:document.getElementById('obs-tx'),sid:'obs-status'};
+  if(ctx==='fld') return {btn:document.getElementById('fld-mic'),lbl:document.getElementById('fld-mic-lbl'),wave:document.getElementById('fld-wave'),box:document.getElementById('fld-tx-box'),tx:document.getElementById('fld-tx'),sid:'fld-status'};
+  if(ctx==='obs') return {btn:document.getElementById('obs-mic'),lbl:document.getElementById('obs-mic-lbl'),wave:document.getElementById('obs-wave'),box:document.getElementById('obs-tx-box'),tx:document.getElementById('obs-tx'),sid:'obs-status'};
+  if(ctx==='fu')  return {btn:document.getElementById('fu-mic'), lbl:document.getElementById('fu-mic-lbl'), wave:document.getElementById('fu-wave'), box:document.getElementById('fu-tx-box'), tx:document.getElementById('fu-tx'), sid:'fu-status'};
 }
 
 // ── SPEECH SESSION ───────────────────────────────────────────
@@ -380,11 +424,8 @@ function startSession(ctx, el){
         setStatus(el.sid,'Mic blocked. Tap AA → Website Settings → Microphone: Allow, then reload.','err');
       }
     };
-    recog.onend=()=>{
-      if(warmSession) setTimeout(launch,150);
-    };
-    try{recog.start();}
-    catch(err){warmSession=false;}
+    recog.onend=()=>{if(warmSession)setTimeout(launch,150);};
+    try{recog.start();}catch(err){warmSession=false;}
   }
   launch();
 }
@@ -392,7 +433,29 @@ function startSession(ctx, el){
 function stopSession(){
   warmSession=false;
   capturing=false;
+  activeCtx=null;
   if(recog){try{recog.stop();}catch(e){}recog=null;}
+}
+
+// ── DATE / TIME SHORTCUTS ────────────────────────────────────
+function todayString(){
+  const d=new Date();
+  return d.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+}
+function nowString(){
+  const d=new Date();
+  return d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
+}
+function replaceTodayNow(text, type){
+  if(type==='today') return text.replace(/\btoday\b/gi, todayString());
+  if(type==='now')   return text.replace(/\bnow\b/gi,   nowString());
+  return text;
+}
+function fillShortcut(){
+  const f=FIELDS[curField];
+  const val=f.shortcut==='today'?todayString():nowString();
+  document.getElementById('fld-tx').textContent=val;
+  committed.fld=val;
 }
 
 // ── VOICE ────────────────────────────────────────────────────
@@ -416,13 +479,11 @@ function speak(text){
 
 // ── PAGE VISIBILITY ──────────────────────────────────────────
 document.addEventListener('visibilitychange',()=>{
-  if(document.hidden){
-    if(warmSession){
-      stopSession();
-      preparing=false;
-      capturing=false;
-      clearTimeout(prepTimer);
-    }
+  if(document.hidden&&warmSession){
+    stopSession();
+    preparing=false;
+    capturing=false;
+    clearTimeout(prepTimer);
   }
 });
 
@@ -438,7 +499,8 @@ function requestMicPermission(){
   try{t.start();}catch(e){onPermGranted();}
 }
 function onPermGranted(){
-  const b=document.getElementById('perm-btn');b.textContent='✓ Microphone Allowed';b.classList.add('granted');b.onclick=null;
+  const b=document.getElementById('perm-btn');
+  b.textContent='✓ Microphone Allowed';b.classList.add('granted');b.onclick=null;
   setStatus('perm-status','You\'re ready to go.','ok');
   const s=document.getElementById('start-btn');s.style.opacity='1';s.style.pointerEvents='auto';
 }
@@ -450,7 +512,12 @@ function showScreen(id){
   document.getElementById(id).classList.add('active');
   window.scrollTo(0,0);
 }
-function startReport(){curField=0;reportData={};observations=[];renderField();showScreen('screen-field');setTimeout(()=>speak(FIELDS[0].q),600);}
+function startReport(){
+  curField=0;reportData={};observations=[];
+  renderField();
+  showScreen('screen-field');
+  setTimeout(()=>speak(FIELDS[0].q),600);
+}
 
 // ── FIELDS ───────────────────────────────────────────────────
 function renderField(){
@@ -464,34 +531,49 @@ function renderField(){
   document.getElementById('fld-tx').textContent=ex;
   committed.fld=ex;
   setStatus('fld-status','','');
+  // Show/hide shortcut button
+  const sb=document.getElementById('fld-shortcut');
+  if(f.shortcut){
+    sb.style.display='block';
+    sb.textContent=f.shortcut==='today'?'📅 Use Today\'s Date':'🕐 Use Current Time';
+  } else {
+    sb.style.display='none';
+  }
   stopSession();
-
 }
-function clearField(){document.getElementById('fld-tx').textContent='';committed.fld='';delete reportData[FIELDS[curField].key];setStatus('fld-status','','');}
+function clearField(){
+  document.getElementById('fld-tx').textContent='';
+  committed.fld='';
+  delete reportData[FIELDS[curField].key];
+  setStatus('fld-status','','');
+}
 function nextField(){
   const t=document.getElementById('fld-tx').textContent.trim();
   if(t)reportData[FIELDS[curField].key]=t;
   stopSession();
   curField++;
   if(curField>=FIELDS.length){renderObs();showScreen('screen-obs');setTimeout(()=>speak('Now add your observations. Tap the plus button to begin.'),500);return;}
-  renderField();setTimeout(()=>speak(FIELDS[curField].q),300);
+  renderField();
+  setTimeout(()=>speak(FIELDS[curField].q),300);
 }
 function skipField(){
   stopSession();
   curField++;
   if(curField>=FIELDS.length){renderObs();showScreen('screen-obs');return;}
-  renderField();setTimeout(()=>speak(FIELDS[curField].q),300);
+  renderField();
+  setTimeout(()=>speak(FIELDS[curField].q),300);
 }
 function goBackToFields(){stopSession();curField=FIELDS.length-1;renderField();showScreen('screen-field');}
 
 // ── OBSERVATIONS ─────────────────────────────────────────────
 function openObsModal(){
-  document.getElementById('obs-tx').textContent='';committed.obs='';curObsPhoto=null;
-  document.getElementById('obs-photo-prev').style.display='none';
-  document.getElementById('obs-photo-fname').textContent='';
-  document.getElementById('obs-photo-clr').style.display='none';
-  document.getElementById('obs-photo-input').value='';
+  document.getElementById('obs-tx').textContent='';
+  document.getElementById('fu-tx').textContent='';
+  committed.obs='';committed.fu='';
+  curObsPhotos=[];
+  renderPhotoGrid();
   setStatus('obs-status','','');
+  setStatus('fu-status','','');
   document.getElementById('obs-modal').classList.add('active');
   stopSession();
   setTimeout(()=>speak('Describe what you observed.'),300);
@@ -503,36 +585,58 @@ function closeObsModal(){
 function saveObs(){
   const text=document.getElementById('obs-tx').textContent.trim();
   if(!text){setStatus('obs-status','Please add a description first.','err');return;}
-  observations.push({description:text,photoFilename:curObsPhoto?curObsPhoto.filename:null,photoDataUrl:curObsPhoto?curObsPhoto.dataUrl:null});
-  closeObsModal();renderObs();
+  const followup=document.getElementById('fu-tx').textContent.trim();
+  observations.push({
+    description:text,
+    followup:followup||null,
+    photos:[...curObsPhotos]
+  });
+  closeObsModal();
+  renderObs();
 }
+function delObs(i){observations.splice(i,1);renderObs();}
+
+// Photos
 function photoSelected(e){
   const file=e.target.files[0];if(!file)return;
   const reader=new FileReader();
   reader.onload=(ev)=>{
-    curObsPhoto={filename:file.name,dataUrl:ev.target.result};
-    const p=document.getElementById('obs-photo-prev');p.src=ev.target.result;p.style.display='block';
-    document.getElementById('obs-photo-fname').textContent=file.name;
-    document.getElementById('obs-photo-clr').style.display='block';
+    curObsPhotos.push({filename:file.name,dataUrl:ev.target.result});
+    renderPhotoGrid();
   };
   reader.readAsDataURL(file);
+  e.target.value=''; // reset so same file can be re-selected
 }
-function clearObsPhoto(){curObsPhoto=null;document.getElementById('obs-photo-prev').style.display='none';document.getElementById('obs-photo-fname').textContent='';document.getElementById('obs-photo-clr').style.display='none';document.getElementById('obs-photo-input').value='';}
+function removeObsPhoto(i){
+  curObsPhotos.splice(i,1);
+  renderPhotoGrid();
+}
+function renderPhotoGrid(){
+  const grid=document.getElementById('obs-photo-grid');
+  let html=curObsPhotos.map((p,i)=>`
+    <div class="photo-thumb-wrap">
+      <img src="${p.dataUrl}" class="photo-thumb" alt="photo">
+      <button class="photo-thumb-del" onclick="removeObsPhoto(${i})">×</button>
+    </div>`).join('');
+  html+=`<button class="btn-add-photo" onclick="document.getElementById('obs-photo-input').click()">+</button>`;
+  grid.innerHTML=html;
+}
+
 function renderObs(){
   const list=document.getElementById('obs-list');
   if(!observations.length){list.innerHTML='<div class="obs-empty">No observations yet.<br>Tap below to add one.</div>';return;}
   list.innerHTML=observations.map((o,i)=>`
     <div class="obs-card">
       <span class="obs-num">OBS ${i+1}</span>
-      <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
-        <span class="obs-text">${o.description}</span>
-        ${o.photoFilename?`<div style="display:flex;align-items:center;gap:8px;">${o.photoDataUrl?`<img src="${o.photoDataUrl}" class="obs-card-photo" alt="photo">`:''}
-          <span style="font-size:11px;font-family:var(--mono);color:var(--accent);">${o.photoFilename}</span></div>`:''}
+      <div class="obs-card-body">
+        <div class="obs-card-label">Item of Note</div>
+        <div class="obs-text">${o.description}</div>
+        ${o.followup?`<div class="obs-card-label" style="margin-top:6px;">Follow-Up / Action Required</div><div class="obs-followup">${o.followup}</div>`:''}
+        ${o.photos&&o.photos.length?`<div class="obs-card-photos">${o.photos.map(p=>`<img src="${p.dataUrl}" class="obs-card-photo" alt="photo">`).join('')}</div>`:''}
       </div>
       <button class="obs-del" onclick="delObs(${i})">×</button>
     </div>`).join('');
 }
-function delObs(i){observations.splice(i,1);renderObs();}
 
 // ── REVIEW ───────────────────────────────────────────────────
 function buildReview(){
@@ -545,9 +649,11 @@ function buildReview(){
   if(observations.length){
     html+=`<div><div class="rev-sec-lbl">Observations (${observations.length})</div>`;
     observations.forEach((o,i)=>{
-      html+=`<div class="rev-fld"><div class="rev-fld-lbl">Observation ${i+1}</div><div class="rev-fld-val">${o.description}</div>
-        ${o.photoFilename?`<div style="display:flex;align-items:center;gap:8px;margin-top:6px;">${o.photoDataUrl?`<img src="${o.photoDataUrl}" style="width:40px;height:40px;border-radius:6px;object-fit:cover;border:1px solid var(--border);">`:''}
-          <span style="font-size:11px;font-family:var(--mono);color:var(--accent);">${o.photoFilename}</span></div>`:''}
+      html+=`<div class="rev-fld">
+        <div class="rev-fld-lbl">Observation ${i+1} — Item of Note</div>
+        <div class="rev-fld-val">${o.description}</div>
+        ${o.followup?`<div class="rev-fld-lbl" style="margin-top:8px;">Follow-Up / Action Required</div><div class="rev-fld-val" style="color:var(--accent)">${o.followup}</div>`:''}
+        ${o.photos&&o.photos.length?`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">${o.photos.map(p=>`<img src="${p.dataUrl}" style="width:48px;height:48px;border-radius:6px;object-fit:cover;border:1px solid var(--border);">`).join('')}</div>`:''}
       </div>`;
     });
     html+='</div>';
@@ -562,11 +668,28 @@ async function exportReport(){
   try{
     msg.textContent='Building report…';
     const ts=new Date().toISOString().split('T')[0];
-    const report={exported_at:new Date().toISOString(),fields:reportData,observations:observations.map((o,i)=>({id:i+1,description:o.description,photo_filename:o.photoFilename||null,photo_ref:`Photo ${i+1}`}))};
+    const report={
+      exported_at:new Date().toISOString(),
+      fields:reportData,
+      observations:observations.map((o,i)=>({
+        id:i+1,
+        description:o.description,
+        followup:o.followup||null,
+        photos:o.photos?o.photos.map((p,pi)=>({filename:p.filename,photo_ref:`Obs${i+1}-Photo${pi+1}`})):[]
+      }))
+    };
     msg.textContent='Adding photos…';
     const zip=new JSZip();
     zip.file('report.json',JSON.stringify(report,null,2));
-    for(const o of observations){if(o.photoDataUrl&&o.photoFilename)zip.file(`photos/${o.photoFilename}`,o.photoDataUrl.split(',')[1],{base64:true});}
+    let totalPhotos=0;
+    for(const o of observations){
+      if(o.photos){
+        for(const p of o.photos){
+          zip.file(`photos/${p.filename}`,p.dataUrl.split(',')[1],{base64:true});
+          totalPhotos++;
+        }
+      }
+    }
     msg.textContent='Compressing…';
     const blob=await zip.generateAsync({type:'blob',compression:'DEFLATE',compressionOptions:{level:6}});
     msg.textContent='Preparing download…';
@@ -574,12 +697,12 @@ async function exportReport(){
     const a=document.createElement('a');a.href=url;a.download=`field-report_${ts}.zip`;
     document.body.appendChild(a);a.click();document.body.removeChild(a);
     setTimeout(()=>URL.revokeObjectURL(url),5000);
-    const pc=observations.filter(o=>o.photoFilename).length;
-    document.getElementById('exp-detail').textContent=`Zip contains report.json and ${pc} photo${pc!==1?'s':''} in a photos/ folder. Save to Files or share via AirDrop.`;
+    document.getElementById('exp-detail').textContent=`Zip contains report.json and ${totalPhotos} photo${totalPhotos!==1?'s':''} in a photos/ folder. Save to Files or share via AirDrop.`;
     showScreen('screen-success');
   }catch(err){msg.textContent=`Error: ${err.message}. Try again.`;}
 }
 
+// ── UTILS ────────────────────────────────────────────────────
 function confirmRestart(){
   if(confirm('Start a new report? Current data will be cleared.')){
     stopSession();
@@ -588,11 +711,19 @@ function confirmRestart(){
     clearTimeout(prepTimer);
     curField=0;reportData={};observations=[];
     showScreen('screen-welcome');
-    // If mic was already granted, re-enable the start button immediately
-    onPermGranted();
+    setTimeout(()=>{
+      const s=document.getElementById('start-btn');
+      s.style.opacity='1';
+      s.style.pointerEvents='auto';
+    },300);
   }
 }
-function setStatus(id,msg,type){const el=document.getElementById(id);el.textContent=msg;el.className='status'+(type?' '+type:'');}
+function setStatus(id,msg,type){
+  const el=document.getElementById(id);
+  if(!el)return;
+  el.textContent=msg;
+  el.className='status'+(type?' '+type:'');
+}
 </script>
 </body>
 </html>
