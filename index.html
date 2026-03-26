@@ -218,7 +218,7 @@
     <div class="modal-section-lbl">Item of Note</div>
     <div class="tx-box" id="obs-tx-box">
       <div class="wave" id="obs-wave"><span></span><span></span><span></span><span></span><span></span></div>
-      <div class="tx-text" id="obs-tx" contenteditable="true" data-placeholder="Hold the mic and describe what you observed..."></div>
+      <textarea class="tx-textarea" id="obs-tx" placeholder="Hold the mic and describe what you observed..."></textarea>
     </div>
     <button class="btn-mic sm" id="obs-mic"
       ontouchstart="micDown(event,'obs')" ontouchend="micUp(event,'obs')" ontouchcancel="micUp(event,'obs')"
@@ -235,7 +235,7 @@
     <div class="modal-section-lbl">Follow-Up / Action Required</div>
     <div class="tx-box" id="fu-tx-box">
       <div class="wave" id="fu-wave"><span></span><span></span><span></span><span></span><span></span></div>
-      <div class="tx-text" id="fu-tx" contenteditable="true" data-placeholder="Hold the mic to record follow-up action..."></div>
+      <textarea class="tx-textarea" id="fu-tx" placeholder="Hold the mic to record follow-up action..."></textarea>
     </div>
     <button class="btn-mic sm" id="fu-mic"
       ontouchstart="micDown(event,'fu')" ontouchend="micUp(event,'fu')" ontouchcancel="micUp(event,'fu')"
@@ -378,7 +378,7 @@ function micUp(e,ctx){
   }
   if(!capturing)return;
   capturing=false;
-  committed[ctx]=el.tx.textContent.trim();
+  committed[ctx]=(ctx==='obs'||ctx==='fu')?el.tx.value.trim():el.tx.textContent.trim();
   // Auto-replace "today" with actual date for date field
   if(ctx==='fld' && FIELDS[curField].shortcut==='today'){
     committed[ctx]=replaceTodayNow(committed[ctx],'today');
@@ -416,7 +416,9 @@ function startSession(ctx, el){
       let txt='';
       for(let i=0;i<e.results.length;i++) txt+=e.results[i][0].transcript;
       const base=committed[ctx];
-      el.tx.textContent=base?base+' '+txt:txt;
+      const full=base?base+' '+txt:txt;
+      if(ctx==='obs'||ctx==='fu') el.tx.value=full;
+      else el.tx.textContent=full;
     };
     recog.onerror=(e)=>{
       if(e.error==='not-allowed'||e.error==='service-not-allowed'){
@@ -567,8 +569,8 @@ function goBackToFields(){stopSession();curField=FIELDS.length-1;renderField();s
 
 // ── OBSERVATIONS ─────────────────────────────────────────────
 function openObsModal(){
-  document.getElementById('obs-tx').textContent='';
-  document.getElementById('fu-tx').textContent='';
+  document.getElementById('obs-tx').value='';
+  document.getElementById('fu-tx').value='';
   committed.obs='';committed.fu='';
   curObsPhotos=[];
   renderPhotoGrid();
@@ -583,9 +585,9 @@ function closeObsModal(){
   document.getElementById('obs-modal').classList.remove('active');
 }
 function saveObs(){
-  const text=document.getElementById('obs-tx').textContent.trim();
+  const text=document.getElementById('obs-tx').value.trim();
   if(!text){setStatus('obs-status','Please add a description first.','err');return;}
-  const followup=document.getElementById('fu-tx').textContent.trim();
+  const followup=document.getElementById('fu-tx').value.trim();
   observations.push({
     description:text,
     followup:followup||null,
