@@ -186,7 +186,6 @@
       <span id="fld-mic-lbl">Hold to Record</span>
     </button>
     <div class="btn-row">
-      <button class="btn-sec" onclick="skipField()">Skip</button>
       <button class="btn-nxt" onclick="nextField()">Next →</button>
     </div>
   </div>
@@ -217,10 +216,6 @@
     <div class="modal-title">New Observation</div>
 
     <div class="modal-section-lbl">Item of Note</div>
-    <div class="tx-box" id="obs-tx-box">
-      <div class="wave" id="obs-wave"><span></span><span></span><span></span><span></span><span></span></div>
-      <textarea class="tx-textarea" id="obs-tx" placeholder="Hold the mic and describe what you observed..."></textarea>
-    </div>
     <button class="btn-mic sm" id="obs-mic"
       ontouchstart="micDown(event,'obs')" ontouchend="micUp(event,'obs')" ontouchcancel="micUp(event,'obs')"
       onmousedown="micDown(event,'obs')" onmouseup="micUp(event,'obs')" onmouseleave="micUp(event,'obs')">
@@ -232,12 +227,12 @@
       <span id="obs-mic-lbl">Hold to Record</span>
     </button>
     <div class="status" id="obs-status"></div>
+    <div class="tx-box" id="obs-tx-box">
+      <div class="wave" id="obs-wave"><span></span><span></span><span></span><span></span><span></span></div>
+      <textarea class="tx-textarea" id="obs-tx" placeholder="Transcription will appear here..."></textarea>
+    </div>
 
     <div class="modal-section-lbl">Follow-Up / Action Required</div>
-    <div class="tx-box" id="fu-tx-box">
-      <div class="wave" id="fu-wave"><span></span><span></span><span></span><span></span><span></span></div>
-      <textarea class="tx-textarea" id="fu-tx" placeholder="Hold the mic to record follow-up action..."></textarea>
-    </div>
     <button class="btn-mic sm" id="fu-mic"
       ontouchstart="micDown(event,'fu')" ontouchend="micUp(event,'fu')" ontouchcancel="micUp(event,'fu')"
       onmousedown="micDown(event,'fu')" onmouseup="micUp(event,'fu')" onmouseleave="micUp(event,'fu')">
@@ -249,6 +244,10 @@
       <span id="fu-mic-lbl">Hold to Record</span>
     </button>
     <div class="status" id="fu-status"></div>
+    <div class="tx-box" id="fu-tx-box">
+      <div class="wave" id="fu-wave"><span></span><span></span><span></span><span></span><span></span></div>
+      <textarea class="tx-textarea" id="fu-tx" placeholder="Transcription will appear here..."></textarea>
+    </div>
 
     <div class="modal-section-lbl">Photos</div>
     <input type="file" id="obs-photo-input" accept="image/*" onchange="photoSelected(event)">
