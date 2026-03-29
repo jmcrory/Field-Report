@@ -30,11 +30,10 @@
   .fld-body{flex:1;display:flex;flex-direction:column;padding:32px 24px 24px;gap:24px;overflow-y:auto;}
   .fld-q{font-size:26px;font-weight:700;line-height:1.15;letter-spacing:-.02em;color:var(--text);}
   .fld-hint{font-size:13px;color:var(--muted);font-family:var(--mono);margin-top:6px;}
-  .tx-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;min-height:80px;max-height:180px;font-size:16px;line-height:1.6;position:relative;transition:border-color .2s;}
+  .tx-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;min-height:80px;font-size:16px;line-height:1.6;position:relative;transition:border-color .2s;}
   .tx-box.waiting{border-color:var(--warning);box-shadow:0 0 0 3px rgba(230,168,23,.15);}
   .tx-box.listening{border-color:var(--accent);box-shadow:0 0 0 3px rgba(53,69,90,.1);}
   .tx-text{outline:none;min-height:48px;color:var(--text);}
-  .tx-textarea{width:100%;height:120px;max-height:120px;font-size:16px;font-family:var(--sans);line-height:1.6;color:var(--text);background:transparent;border:none;outline:none;resize:none;overflow-y:scroll;-webkit-overflow-scrolling:touch;display:block;}
   [contenteditable]:empty:before{content:attr(data-placeholder);color:var(--muted);font-style:italic;pointer-events:none;}
   .wave{display:none;align-items:center;gap:4px;position:absolute;top:14px;right:14px;}
   .wave.on{display:flex;}
@@ -229,7 +228,7 @@
     <div class="status" id="obs-status"></div>
     <div class="tx-box" id="obs-tx-box">
       <div class="wave" id="obs-wave"><span></span><span></span><span></span><span></span><span></span></div>
-      <textarea class="tx-textarea" id="obs-tx" placeholder="Transcription will appear here..."></textarea>
+      <div class="tx-text" id="obs-tx" contenteditable="true" data-placeholder="Transcription will appear here..."></div>
     </div>
 
     <div class="modal-section-lbl">Follow-Up / Action Required</div>
@@ -246,7 +245,7 @@
     <div class="status" id="fu-status"></div>
     <div class="tx-box" id="fu-tx-box">
       <div class="wave" id="fu-wave"><span></span><span></span><span></span><span></span><span></span></div>
-      <textarea class="tx-textarea" id="fu-tx" placeholder="Transcription will appear here..."></textarea>
+      <div class="tx-text" id="fu-tx" contenteditable="true" data-placeholder="Transcription will appear here..."></div>
     </div>
 
     <div class="modal-section-lbl">Photos</div>
@@ -378,7 +377,7 @@ function micUp(e,ctx){
   }
   if(!capturing)return;
   capturing=false;
-  committed[ctx]=(ctx==='obs'||ctx==='fu')?el.tx.value.trim():el.tx.textContent.trim();
+  committed[ctx]=el.tx.textContent.trim();
   // Auto-replace "today" with actual date for date field
   if(ctx==='fld' && FIELDS[curField].shortcut==='today'){
     committed[ctx]=replaceTodayNow(committed[ctx],'today');
@@ -417,7 +416,7 @@ function startSession(ctx, el){
       for(let i=0;i<e.results.length;i++) txt+=e.results[i][0].transcript;
       const base=committed[ctx];
       const full=base?base+' '+txt:txt;
-      if(ctx==='obs'||ctx==='fu') el.tx.value=full;
+      if(ctx==='obs'||ctx==='fu') el.tx.textContent=full;
       else el.tx.textContent=full;
     };
     recog.onerror=(e)=>{
@@ -569,8 +568,8 @@ function goBackToFields(){stopSession();curField=FIELDS.length-1;renderField();s
 
 // ── OBSERVATIONS ─────────────────────────────────────────────
 function openObsModal(){
-  document.getElementById('obs-tx').value='';
-  document.getElementById('fu-tx').value='';
+  document.getElementById('obs-tx').textContent='';
+  document.getElementById('fu-tx').textContent='';
   committed.obs='';committed.fu='';
   curObsPhotos=[];
   renderPhotoGrid();
@@ -585,9 +584,9 @@ function closeObsModal(){
   document.getElementById('obs-modal').classList.remove('active');
 }
 function saveObs(){
-  const text=document.getElementById('obs-tx').value.trim();
+  const text=document.getElementById('obs-tx').textContent.trim();
   if(!text){setStatus('obs-status','Please add a description first.','err');return;}
-  const followup=document.getElementById('fu-tx').value.trim();
+  const followup=document.getElementById('fu-tx').textContent.trim();
   observations.push({
     description:text,
     followup:followup||null,
