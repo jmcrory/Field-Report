@@ -215,7 +215,10 @@
 <div class="modal-ov" id="obs-modal">
   <div class="modal-sheet">
     <div class="modal-scroll">
-      <div class="modal-title">New Observation</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div class="modal-title">New Observation</div>
+        <button onclick="showDebug()" style="background:#35455a;color:#fff;border:none;border-radius:8px;padding:4px 10px;font-size:11px;font-family:monospace;cursor:pointer;">Debug</button>
+      </div>
 
       <div class="modal-section-lbl">Item of Note</div>
       <button class="btn-mic sm" id="obs-mic"
@@ -572,6 +575,33 @@ function skipField(){
 }
 function goBackToFields(){stopSession();curField=FIELDS.length-1;renderField();showScreen('screen-field');}
 
+// ── DEBUG ─────────────────────────────────────────────────────
+function showDebug(){
+  const ids=['obs-modal','obs-modal .modal-sheet','obs-modal .modal-scroll','obs-modal .modal-footer','obs-tx-box','obs-tx'];
+  const lines=ids.map(sel=>{
+    const el=document.querySelector(sel);
+    if(!el) return `${sel}: NOT FOUND`;
+    const cs=window.getComputedStyle(el);
+    const r=el.getBoundingClientRect();
+    return `<b>${sel.replace('obs-modal ','')}:</b> `+
+      `rect h=${Math.round(r.height)} `+
+      `scroll h=${el.scrollHeight} `+
+      `overflow=${cs.overflow}/${cs.overflowY} `+
+      `display=${cs.display} `+
+      `flex=${cs.flex}`;
+  });
+  let panel=document.getElementById('dbg-panel');
+  if(!panel){
+    panel=document.createElement('div');
+    panel.id='dbg-panel';
+    panel.style.cssText='position:fixed;top:0;left:0;right:0;z-index:9999;background:rgba(0,0,0,0.85);color:#0f0;font:11px monospace;padding:8px;max-height:50vh;overflow-y:auto;-webkit-overflow-scrolling:touch;';
+    panel.innerHTML='<button onclick="document.getElementById(\'dbg-panel\').remove()" style="float:right;background:#c00;color:#fff;border:none;padding:2px 8px;border-radius:4px;font-size:11px;">✕</button>'+lines.join('<br>');
+    document.body.appendChild(panel);
+  } else {
+    panel.innerHTML='<button onclick="document.getElementById(\'dbg-panel\').remove()" style="float:right;background:#c00;color:#fff;border:none;padding:2px 8px;border-radius:4px;font-size:11px;">✕</button>'+lines.join('<br>');
+  }
+}
+
 // ── OBSERVATIONS ─────────────────────────────────────────────
 function openObsModal(){
   document.getElementById('obs-tx').textContent='';
@@ -584,6 +614,7 @@ function openObsModal(){
   document.getElementById('obs-modal').classList.add('active');
   stopSession();
   setTimeout(()=>speak('Describe what you observed.'),300);
+  setTimeout(showDebug, 400);
 }
 function closeObsModal(){
   stopSession();
