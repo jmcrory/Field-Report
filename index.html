@@ -67,6 +67,8 @@
   .btn-sec:active{background:var(--surface2);}
   .btn-nxt{flex:2;background:var(--accent);color:#fff;border:none;border-radius:100px;padding:16px;font-size:15px;font-weight:700;font-family:var(--sans);cursor:pointer;-webkit-appearance:none;touch-action:manipulation;}
   .btn-nxt:active{opacity:.8;}
+  .btn-obs{background:var(--surface);color:var(--accent);border:1.5px solid var(--accent);border-radius:100px;padding:14px;font-size:14px;font-weight:700;font-family:var(--sans);cursor:pointer;text-align:center;width:100%;-webkit-appearance:none;touch-action:manipulation;}
+  .btn-obs:active{background:var(--accent-dim);}
   .btn-clr{background:none;border:1px solid var(--border);border-radius:100px;padding:10px 18px;font-size:12px;font-family:var(--mono);color:var(--muted);cursor:pointer;touch-action:manipulation;align-self:flex-start;}
   .btn-clr:active{background:var(--surface2);color:var(--danger);border-color:var(--danger);}
   .btn-today{background:var(--accent-dim);border:1px solid var(--accent);border-radius:100px;padding:10px 18px;font-size:12px;font-family:var(--mono);color:var(--accent);cursor:pointer;touch-action:manipulation;font-weight:600;}
@@ -116,6 +118,13 @@
   .btn-add-photo{background:var(--accent);border:none;border-radius:12px;width:72px;height:72px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:32px;flex-shrink:0;touch-action:manipulation;box-shadow:0 4px 12px rgba(53,69,90,.25);}
   .btn-add-photo:active{opacity:.8;}
 
+  /* ── SITE PHOTOS ── */
+  .site-photo-grid{display:flex;gap:10px;flex-wrap:wrap;padding:24px;}
+  .site-photo-wrap{position:relative;width:calc(33.33% - 8px);}
+  .site-photo-wrap img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;border:1px solid var(--border);display:block;}
+  .site-photo-del{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:var(--danger);color:#fff;border:none;font-size:13px;line-height:22px;text-align:center;cursor:pointer;padding:0;touch-action:manipulation;}
+  .site-photo-count{font-size:12px;font-family:var(--mono);color:var(--muted);padding:0 24px 8px;}
+
   /* ── REVIEW ── */
   .rev-body{flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:20px;}
   .rev-sec-lbl{font-size:10px;font-family:var(--mono);color:var(--accent);letter-spacing:.15em;text-transform:uppercase;margin-bottom:10px;}
@@ -123,13 +132,7 @@
   .rev-fld-lbl{font-size:10px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.1em;}
   .rev-fld-val{font-size:15px;line-height:1.5;}
 
-  /* ── MODAL ──
-     The key insight for iOS Safari:
-     - .modal-sheet must have overflow:hidden so it clips at max-height
-     - .modal-scroll must be display:block (NOT flex) with overflow-y:scroll
-     - .modal-scroll needs min-height:0 so flex layout doesn't override its size
-     - .modal-footer must be flex-shrink:0 so it never gets squeezed out
-  */
+  /* ── MODAL ── */
   .modal-ov{
     display:none;
     position:fixed;
@@ -248,9 +251,13 @@
       </svg>
       <span id="fld-mic-lbl">Hold to Record</span>
     </button>
+    <!-- Back (hidden on field 0) + Next -->
     <div class="btn-row">
+      <button class="btn-sec" id="fld-back-btn" onclick="prevField()" style="display:none;">← Back</button>
       <button class="btn-nxt" onclick="nextField()">Next →</button>
     </div>
+    <!-- Go to Observations shortcut -->
+    <button class="btn-obs" onclick="goToObs()">Go to Observations →</button>
   </div>
 </div>
 
@@ -268,7 +275,7 @@
   <div class="obs-footer">
     <div class="btn-row">
       <button class="btn-sec" onclick="goBackToFields()">← Back</button>
-      <button class="btn-nxt" onclick="showScreen('screen-review')">Review →</button>
+      <button class="btn-nxt" onclick="showScreen('screen-site-photos')">Site Photos →</button>
     </div>
   </div>
 </div>
@@ -276,7 +283,6 @@
 <!-- ── OBSERVATION MODAL ── -->
 <div class="modal-ov" id="obs-modal">
   <div class="modal-sheet">
-
     <div class="modal-scroll">
       <div class="modal-title">New Observation</div>
 
@@ -315,20 +321,41 @@
       </div>
 
       <div class="modal-section-lbl">Photos</div>
-      <input type="file" id="obs-photo-input" accept="image/*" onchange="photoSelected(event)">
+      <input type="file" id="obs-photo-input" accept="image/*" multiple onchange="photoSelected(event)">
       <div class="photo-grid" id="obs-photo-grid">
         <button class="btn-add-photo" onclick="document.getElementById('obs-photo-input').click()">+</button>
       </div>
-    </div><!-- end .modal-scroll -->
-
+    </div>
     <div class="modal-footer">
       <div class="btn-row">
         <button class="btn-sec" onclick="closeObsModal()">Cancel</button>
         <button class="btn-nxt" onclick="saveObs()">Add →</button>
       </div>
     </div>
+  </div>
+</div>
 
-  </div><!-- end .modal-sheet -->
+<!-- ── SITE PHOTOS ── -->
+<div class="screen" id="screen-site-photos">
+  <div class="hdr">
+    <div class="hdr-top"><span class="app-lbl">Field Report</span></div>
+    <h1>Site Photos</h1>
+  </div>
+  <div style="flex:1;overflow-y:auto;display:flex;flex-direction:column;">
+    <div style="padding:24px 24px 8px;display:flex;flex-direction:column;gap:10px;">
+      <p style="font-size:13px;color:var(--muted);font-family:var(--mono);line-height:1.6;">Add all photos from this visit. These will be exported to <span style="color:var(--accent);font-weight:700;">photos/site/</span> in the zip file — duplicates are fine.</p>
+      <input type="file" id="site-photo-input" accept="image/*" multiple onchange="sitePhotoSelected(event)" style="display:none;">
+      <button class="btn-obs" onclick="document.getElementById('site-photo-input').click()">+ Add Site Photos</button>
+    </div>
+    <div class="site-photo-count" id="site-photo-count"></div>
+    <div class="site-photo-grid" id="site-photo-grid"></div>
+  </div>
+  <div class="obs-footer">
+    <div class="btn-row">
+      <button class="btn-sec" onclick="showScreen('screen-obs')">← Back</button>
+      <button class="btn-nxt" onclick="showScreen('screen-review')">Review →</button>
+    </div>
+  </div>
 </div>
 
 <!-- ── REVIEW ── -->
@@ -340,7 +367,7 @@
   <div class="rev-body" id="rev-body"></div>
   <div style="padding:20px 24px 36px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:12px;align-items:center;">
     <button class="btn-exp" onclick="exportReport()">Export Report</button>
-    <button class="btn-sec" style="text-align:center;width:100%;" onclick="showScreen('screen-obs')">← Edit Observations</button>
+    <button class="btn-sec" style="text-align:center;width:100%;" onclick="showScreen('screen-site-photos')">← Edit Site Photos</button>
     <button class="btn-rst" onclick="confirmRestart()">Start Over</button>
   </div>
 </div>
@@ -392,7 +419,7 @@ const FIELDS=[
   {key:'reviewed_by',      label:'Report Reviewed By',  q:'Who will review this report?',                 hint:'Full name'},
 ];
 
-let curField=0, reportData={}, observations=[], curObsPhotos=[];
+let curField=0, reportData={}, observations=[], curObsPhotos=[], sitePhotos=[];
 let recog=null;
 let committed={fld:'',obs:'',fu:''};
 let capturing=false;
@@ -581,13 +608,18 @@ function showScreen(id){
   window.scrollTo(0,0);
 }
 function startReport(){
-  curField=0;reportData={};observations=[];
+  curField=0;reportData={};observations=[];sitePhotos=[];
   renderField();
   showScreen('screen-field');
   setTimeout(()=>speak(FIELDS[0].q),600);
 }
 
 // ── FIELDS ───────────────────────────────────────────────────
+function saveCurrentField(){
+  const t=document.getElementById('fld-tx').textContent.trim();
+  if(t) reportData[FIELDS[curField].key]=t;
+}
+
 function renderField(){
   const f=FIELDS[curField];
   document.getElementById('fld-name').textContent=f.label;
@@ -599,6 +631,7 @@ function renderField(){
   document.getElementById('fld-tx').textContent=ex;
   committed.fld=ex;
   setStatus('fld-status','','');
+  // Show/hide shortcut button
   const sb=document.getElementById('fld-shortcut');
   if(f.shortcut){
     sb.style.display='block';
@@ -606,24 +639,54 @@ function renderField(){
   } else {
     sb.style.display='none';
   }
+  // Show/hide back button — hidden on field 0
+  document.getElementById('fld-back-btn').style.display=curField===0?'none':'block';
   stopSession();
 }
+
 function clearField(){
   document.getElementById('fld-tx').textContent='';
   committed.fld='';
   delete reportData[FIELDS[curField].key];
   setStatus('fld-status','','');
 }
+
 function nextField(){
-  const t=document.getElementById('fld-tx').textContent.trim();
-  if(t)reportData[FIELDS[curField].key]=t;
+  saveCurrentField();
   stopSession();
   curField++;
-  if(curField>=FIELDS.length){renderObs();showScreen('screen-obs');setTimeout(()=>speak('Now add your observations. Tap the plus button to begin.'),500);return;}
+  if(curField>=FIELDS.length){
+    renderObs();
+    showScreen('screen-obs');
+    setTimeout(()=>speak('Now add your observations. Tap the plus button to begin.'),500);
+    return;
+  }
   renderField();
   setTimeout(()=>speak(FIELDS[curField].q),300);
 }
-function goBackToFields(){stopSession();curField=FIELDS.length-1;renderField();showScreen('screen-field');}
+
+function prevField(){
+  saveCurrentField();
+  stopSession();
+  if(curField>0) curField--;
+  renderField();
+  setTimeout(()=>speak(FIELDS[curField].q),300);
+}
+
+function goToObs(){
+  saveCurrentField();
+  stopSession();
+  renderObs();
+  showScreen('screen-obs');
+  setTimeout(()=>speak('Now add your observations. Tap the plus button to begin.'),500);
+}
+
+function goBackToFields(){
+  stopSession();
+  curField=FIELDS.length-1;
+  renderField();
+  showScreen('screen-field');
+}
 
 // ── OBSERVATIONS ─────────────────────────────────────────────
 function openObsModal(){
@@ -653,10 +716,18 @@ function saveObs(){
 function delObs(i){observations.splice(i,1);renderObs();}
 
 function photoSelected(e){
-  const file=e.target.files[0];if(!file)return;
-  const reader=new FileReader();
-  reader.onload=(ev)=>{curObsPhotos.push({filename:file.name,dataUrl:ev.target.result});renderPhotoGrid();};
-  reader.readAsDataURL(file);
+  const files=Array.from(e.target.files);
+  if(!files.length)return;
+  let loaded=0;
+  files.forEach(file=>{
+    const reader=new FileReader();
+    reader.onload=(ev)=>{
+      curObsPhotos.push({filename:file.name,dataUrl:ev.target.result});
+      loaded++;
+      if(loaded===files.length) renderPhotoGrid();
+    };
+    reader.readAsDataURL(file);
+  });
   e.target.value='';
 }
 function removeObsPhoto(i){curObsPhotos.splice(i,1);renderPhotoGrid();}
@@ -687,6 +758,39 @@ function renderObs(){
     </div>`).join('');
 }
 
+// ── SITE PHOTOS ──────────────────────────────────────────────
+function sitePhotoSelected(e){
+  const files=Array.from(e.target.files);
+  if(!files.length)return;
+  let loaded=0;
+  files.forEach(file=>{
+    const reader=new FileReader();
+    reader.onload=(ev)=>{
+      sitePhotos.push({filename:file.name,dataUrl:ev.target.result});
+      loaded++;
+      if(loaded===files.length) renderSitePhotos();
+    };
+    reader.readAsDataURL(file);
+  });
+  e.target.value='';
+}
+function removeSitePhoto(i){sitePhotos.splice(i,1);renderSitePhotos();}
+function renderSitePhotos(){
+  const grid=document.getElementById('site-photo-grid');
+  const count=document.getElementById('site-photo-count');
+  if(!sitePhotos.length){
+    grid.innerHTML='';
+    count.textContent='No photos added yet.';
+    return;
+  }
+  count.textContent=`${sitePhotos.length} photo${sitePhotos.length!==1?'s':''} added`;
+  grid.innerHTML=sitePhotos.map((p,i)=>`
+    <div class="site-photo-wrap">
+      <img src="${p.dataUrl}" alt="site photo">
+      <button class="site-photo-del" onclick="removeSitePhoto(${i})">×</button>
+    </div>`).join('');
+}
+
 // ── REVIEW ───────────────────────────────────────────────────
 function buildReview(){
   let html='<div><div class="rev-sec-lbl">Report Fields</div>';
@@ -707,6 +811,11 @@ function buildReview(){
     });
     html+='</div>';
   }
+  if(sitePhotos.length){
+    html+=`<div><div class="rev-sec-lbl">Site Photos (${sitePhotos.length})</div>`;
+    html+=`<div style="display:flex;gap:6px;flex-wrap:wrap;">${sitePhotos.map(p=>`<img src="${p.dataUrl}" style="width:64px;height:64px;border-radius:8px;object-fit:cover;border:1px solid var(--border);">`).join('')}</div>`;
+    html+='</div>';
+  }
   document.getElementById('rev-body').innerHTML=html;
 }
 
@@ -724,21 +833,33 @@ async function exportReport(){
         id:i+1,
         description:o.description,
         followup:o.followup||null,
-        photos:o.photos?o.photos.map((p,pi)=>({filename:p.filename,photo_ref:`Obs${i+1}-Photo${pi+1}`})):[]
-      }))
+        photos:o.photos?o.photos.map((p,pi)=>({filename:p.filename,photo_ref:`photos/obs/Obs${i+1}-Photo${pi+1}_${p.filename}`})):[]
+      })),
+      site_photos:sitePhotos.map((p,i)=>({filename:p.filename,photo_ref:`photos/site/${p.filename}`}))
     };
-    msg.textContent='Adding photos…';
+    msg.textContent='Adding observation photos…';
     const zip=new JSZip();
     zip.file('report.json',JSON.stringify(report,null,2));
-    let totalPhotos=0;
-    for(const o of observations){
+
+    // Observation photos → photos/obs/
+    let obsPhotoCount=0;
+    for(let i=0;i<observations.length;i++){
+      const o=observations[i];
       if(o.photos){
-        for(const p of o.photos){
-          zip.file(`photos/${p.filename}`,p.dataUrl.split(',')[1],{base64:true});
-          totalPhotos++;
+        for(let pi=0;pi<o.photos.length;pi++){
+          const p=o.photos[pi];
+          zip.file(`photos/obs/Obs${i+1}-Photo${pi+1}_${p.filename}`,p.dataUrl.split(',')[1],{base64:true});
+          obsPhotoCount++;
         }
       }
     }
+
+    // Site photos → photos/site/
+    msg.textContent='Adding site photos…';
+    for(const p of sitePhotos){
+      zip.file(`photos/site/${p.filename}`,p.dataUrl.split(',')[1],{base64:true});
+    }
+
     msg.textContent='Compressing…';
     const blob=await zip.generateAsync({type:'blob',compression:'DEFLATE',compressionOptions:{level:6}});
     msg.textContent='Preparing download…';
@@ -746,7 +867,8 @@ async function exportReport(){
     const a=document.createElement('a');a.href=url;a.download=`field-report_${ts}.zip`;
     document.body.appendChild(a);a.click();document.body.removeChild(a);
     setTimeout(()=>URL.revokeObjectURL(url),5000);
-    document.getElementById('exp-detail').textContent=`Zip contains report.json and ${totalPhotos} photo${totalPhotos!==1?'s':''} in a photos/ folder. Save to Files or share via AirDrop.`;
+    document.getElementById('exp-detail').textContent=
+      `Zip contains report.json, ${obsPhotoCount} observation photo${obsPhotoCount!==1?'s':''} in photos/obs/, and ${sitePhotos.length} site photo${sitePhotos.length!==1?'s':''} in photos/site/. Save to Files or share via AirDrop.`;
     showScreen('screen-success');
   }catch(err){msg.textContent=`Error: ${err.message}. Try again.`;}
 }
@@ -758,7 +880,8 @@ function confirmRestart(){
     preparing=false;
     capturing=false;
     clearTimeout(prepTimer);
-    curField=0;reportData={};observations=[];
+    curField=0;reportData={};observations=[];sitePhotos=[];
+    renderSitePhotos();
     showScreen('screen-welcome');
     setTimeout(()=>{
       const s=document.getElementById('start-btn');
