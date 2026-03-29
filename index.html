@@ -18,8 +18,12 @@
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
   body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;min-height:100dvh;overflow-x:hidden;}
+
+  /* ── SCREENS ── */
   .screen{display:none;flex-direction:column;min-height:100vh;min-height:100dvh;}
   .screen.active{display:flex;}
+
+  /* ── HEADER ── */
   .hdr{padding:56px 24px 20px;border-bottom:1px solid var(--border);background:var(--accent);position:sticky;top:0;z-index:10;}
   .hdr-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
   .app-lbl{font-size:10px;font-family:var(--mono);color:rgba(255,255,255,0.6);letter-spacing:.15em;text-transform:uppercase;}
@@ -27,14 +31,20 @@
   .prog-bar{height:2px;background:rgba(255,255,255,0.2);border-radius:2px;margin-top:14px;overflow:hidden;}
   .prog-fill{height:100%;background:#fff;border-radius:2px;transition:width .4s cubic-bezier(.4,0,.2,1);}
   .step-ctr{font-size:11px;font-family:var(--mono);color:rgba(255,255,255,0.6);}
+
+  /* ── FIELD CAPTURE ── */
   .fld-body{flex:1;display:flex;flex-direction:column;padding:32px 24px 24px;gap:24px;overflow-y:auto;}
   .fld-q{font-size:26px;font-weight:700;line-height:1.15;letter-spacing:-.02em;color:var(--text);}
   .fld-hint{font-size:13px;color:var(--muted);font-family:var(--mono);margin-top:6px;}
+
+  /* ── TEXT BOX ── */
   .tx-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;min-height:80px;font-size:16px;line-height:1.6;position:relative;transition:border-color .2s;}
   .tx-box.waiting{border-color:var(--warning);box-shadow:0 0 0 3px rgba(230,168,23,.15);}
   .tx-box.listening{border-color:var(--accent);box-shadow:0 0 0 3px rgba(53,69,90,.1);}
   .tx-text{outline:none;min-height:48px;color:var(--text);}
   [contenteditable]:empty:before{content:attr(data-placeholder);color:var(--muted);font-style:italic;pointer-events:none;}
+
+  /* ── WAVE ANIMATION ── */
   .wave{display:none;align-items:center;gap:4px;position:absolute;top:14px;right:14px;}
   .wave.on{display:flex;}
   .wave span{display:block;width:4px;border-radius:2px;background:var(--accent);animation:wv .8s ease-in-out infinite;}
@@ -44,6 +54,8 @@
   .wave span:nth-child(4){height:16px;animation-delay:.15s;}
   .wave span:nth-child(5){height:6px;animation-delay:.05s;}
   @keyframes wv{0%,100%{transform:scaleY(.5);opacity:.5;}50%{transform:scaleY(1);opacity:1;}}
+
+  /* ── BUTTONS ── */
   .btn-mic{background:var(--accent);color:#fff;border:none;border-radius:100px;padding:20px 32px;font-size:15px;font-weight:700;font-family:var(--sans);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 4px 16px rgba(53,69,90,.2);width:100%;-webkit-appearance:none;touch-action:none;user-select:none;-webkit-user-select:none;transition:background .15s,box-shadow .15s;}
   .btn-mic.waiting{background:#e6a817;box-shadow:0 4px 16px rgba(230,168,23,.4);color:#000;}
   .btn-mic.listening{background:var(--danger);box-shadow:0 4px 16px rgba(192,57,43,.25);color:#fff;}
@@ -65,6 +77,8 @@
   .perm-btn{background:var(--accent);color:#fff;border:none;border-radius:100px;padding:18px 32px;font-size:16px;font-weight:800;font-family:var(--sans);cursor:pointer;width:100%;touch-action:manipulation;-webkit-appearance:none;box-shadow:0 4px 16px rgba(53,69,90,.2);}
   .perm-btn:active{opacity:.85;}
   .perm-btn.granted{background:var(--surface2);color:var(--accent);box-shadow:none;border:1px solid var(--accent);}
+
+  /* ── SILENT TOGGLE ── */
   .silent-toggle{display:flex;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 18px;width:100%;}
   .silent-toggle-label{display:flex;flex-direction:column;gap:2px;}
   .silent-toggle-title{font-size:14px;font-weight:700;color:var(--text);}
@@ -75,6 +89,8 @@
   .toggle-slider:before{content:'';position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;}
   input:checked+.toggle-slider{background:var(--accent);}
   input:checked+.toggle-slider:before{transform:translateX(18px);}
+
+  /* ── OBSERVATIONS LIST ── */
   .obs-list{display:flex;flex-direction:column;gap:12px;}
   .obs-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;display:flex;gap:14px;align-items:flex-start;animation:sldn .3s ease;}
   @keyframes sldn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
@@ -89,6 +105,9 @@
   .obs-add:active{background:var(--accent-dim);}
   .obs-card-photos{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;}
   .obs-card-photo{width:44px;height:44px;border-radius:8px;object-fit:cover;border:1px solid var(--border);}
+  .obs-footer{padding:20px 24px 36px;border-top:1px solid var(--border);}
+
+  /* ── PHOTOS ── */
   .photo-grid{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
   .photo-grid input[type="file"]{display:none;}
   .photo-thumb-wrap{position:relative;width:56px;height:56px;}
@@ -96,31 +115,75 @@
   .photo-thumb-del{position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--danger);color:#fff;border:none;font-size:12px;line-height:18px;text-align:center;cursor:pointer;padding:0;}
   .btn-add-photo{background:var(--accent);border:none;border-radius:12px;width:72px;height:72px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:32px;flex-shrink:0;touch-action:manipulation;box-shadow:0 4px 12px rgba(53,69,90,.25);}
   .btn-add-photo:active{opacity:.8;}
+
+  /* ── REVIEW ── */
   .rev-body{flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:20px;}
   .rev-sec-lbl{font-size:10px;font-family:var(--mono);color:var(--accent);letter-spacing:.15em;text-transform:uppercase;margin-bottom:10px;}
   .rev-fld{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:4px;margin-bottom:10px;}
   .rev-fld-lbl{font-size:10px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.1em;}
   .rev-fld-val{font-size:15px;line-height:1.5;}
-  .modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;align-items:flex-end;height:100%;height:100dvh;}
+
+  /* ── MODAL ──
+     The key insight for iOS Safari:
+     - .modal-sheet must have overflow:hidden so it clips at max-height
+     - .modal-scroll must be display:block (NOT flex) with overflow-y:scroll
+     - .modal-scroll needs min-height:0 so flex layout doesn't override its size
+     - .modal-footer must be flex-shrink:0 so it never gets squeezed out
+  */
+  .modal-ov{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.45);
+    z-index:100;
+    align-items:flex-end;
+  }
   .modal-ov.active{display:flex;}
-  .modal-sheet{background:var(--surface);border-radius:24px 24px 0 0;padding:0;width:100%;border-top:1px solid var(--border);display:flex;flex-direction:column;animation:shup .3s cubic-bezier(.4,0,.2,1);max-height:90%;max-height:90dvh;}
-  .modal-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:24px 24px 8px;display:flex;flex-direction:column;gap:16px;min-height:0;}
-  .modal-footer{padding:16px 24px 44px;border-top:1px solid var(--border);flex-shrink:0;}
+  .modal-sheet{
+    width:100%;
+    max-height:90vh;
+    max-height:90dvh;
+    background:var(--surface);
+    border-radius:24px 24px 0 0;
+    border-top:1px solid var(--border);
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+    animation:shup .3s cubic-bezier(.4,0,.2,1);
+  }
+  .modal-scroll{
+    flex:1;
+    min-height:0;
+    display:block;
+    overflow-y:scroll;
+    -webkit-overflow-scrolling:touch;
+    padding:24px;
+  }
+  .modal-scroll > * + *{margin-top:16px;}
+  .modal-footer{
+    flex-shrink:0;
+    padding:16px 24px 44px;
+    border-top:1px solid var(--border);
+    background:var(--surface);
+  }
   @keyframes shup{from{transform:translateY(100%);}to{transform:translateY(0);}}
   .modal-title{font-size:18px;font-weight:700;color:var(--text);}
   .modal-section-lbl{font-size:11px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.1em;}
+
+  /* ── STATUS ── */
   .status{font-size:12px;font-family:var(--mono);color:var(--muted);text-align:center;min-height:18px;line-height:1.5;}
   .status.err{color:var(--danger);}
   .status.ok{color:var(--accent);}
   .status.warn{color:var(--warning);}
-  .obs-footer{padding:20px 24px 36px;border-top:1px solid var(--border);}
+
+  /* ── ANIMATIONS ── */
   @keyframes spin{to{transform:rotate(360deg);}}
   @keyframes pop{from{transform:scale(.5);opacity:0;}to{transform:scale(1);opacity:1;}}
 </style>
 </head>
 <body>
 
-<!-- WELCOME -->
+<!-- ── WELCOME ── -->
 <div class="screen active" id="screen-welcome">
   <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:48px 32px;text-align:center;gap:28px;">
     <div style="width:72px;height:72px;border-radius:20px;background:var(--accent-dim);border:1.5px solid var(--accent);display:flex;align-items:center;justify-content:center;">
@@ -153,7 +216,7 @@
   </div>
 </div>
 
-<!-- FIELD CAPTURE -->
+<!-- ── FIELD CAPTURE ── -->
 <div class="screen" id="screen-field">
   <div class="hdr">
     <div class="hdr-top">
@@ -168,7 +231,6 @@
       <div class="fld-q" id="fld-q"></div>
       <div class="fld-hint" id="fld-hint"></div>
     </div>
-    <!-- Today / Now shortcut button (shown only for date/time fields) -->
     <button class="btn-today" id="fld-shortcut" style="display:none;" onclick="fillShortcut()"></button>
     <div class="tx-box" id="fld-tx-box">
       <div class="wave" id="fld-wave"><span></span><span></span><span></span><span></span><span></span></div>
@@ -192,7 +254,7 @@
   </div>
 </div>
 
-<!-- OBSERVATIONS -->
+<!-- ── OBSERVATIONS ── -->
 <div class="screen" id="screen-obs">
   <div class="hdr">
     <div class="hdr-top"><span class="app-lbl">Field Report</span></div>
@@ -211,9 +273,10 @@
   </div>
 </div>
 
-<!-- OBSERVATION MODAL -->
+<!-- ── OBSERVATION MODAL ── -->
 <div class="modal-ov" id="obs-modal">
   <div class="modal-sheet">
+
     <div class="modal-scroll">
       <div class="modal-title">New Observation</div>
 
@@ -256,19 +319,19 @@
       <div class="photo-grid" id="obs-photo-grid">
         <button class="btn-add-photo" onclick="document.getElementById('obs-photo-input').click()">+</button>
       </div>
-    </div>
+    </div><!-- end .modal-scroll -->
 
     <div class="modal-footer">
-      <button onclick="showDebug()" style="width:100%;margin-bottom:10px;background:#35455a;color:#fff;border:none;border-radius:8px;padding:8px;font-size:12px;font-family:monospace;cursor:pointer;touch-action:manipulation;">⚙ Run Debug</button>
       <div class="btn-row">
         <button class="btn-sec" onclick="closeObsModal()">Cancel</button>
         <button class="btn-nxt" onclick="saveObs()">Add →</button>
       </div>
     </div>
-  </div>
+
+  </div><!-- end .modal-sheet -->
 </div>
 
-<!-- REVIEW -->
+<!-- ── REVIEW ── -->
 <div class="screen" id="screen-review">
   <div class="hdr">
     <div class="hdr-top"><span class="app-lbl">Field Report</span></div>
@@ -282,7 +345,7 @@
   </div>
 </div>
 
-<!-- EXPORTING -->
+<!-- ── EXPORTING ── -->
 <div class="screen" id="screen-export">
   <div class="hdr">
     <div class="hdr-top"><span class="app-lbl">Field Report</span></div>
@@ -297,7 +360,7 @@
   </div>
 </div>
 
-<!-- SUCCESS -->
+<!-- ── SUCCESS ── -->
 <div class="screen" id="screen-success">
   <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 32px;gap:20px;text-align:center;">
     <div style="width:72px;height:72px;border-radius:50%;background:var(--accent-dim);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:32px;animation:pop .4s cubic-bezier(.34,1.56,.64,1);color:var(--accent);">✓</div>
@@ -311,7 +374,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
-const PREP_DELAY_MS = 2500; // increase if first words are still being missed
+const PREP_DELAY_MS = 2500;
 
 const FIELDS=[
   {key:'report_number',    label:'Report #',           q:'What is the report number?',                   hint:'e.g. 2026-001'},
@@ -337,13 +400,12 @@ let preparing=false;
 let warmSession=false;
 let silentMode=false;
 let prepTimer=null;
-let activeCtx=null; // tracks which context ('fld','obs','fu') is active
+let activeCtx=null;
 
 // ── MIC HANDLERS ─────────────────────────────────────────────
 function micDown(e,ctx){
   e.preventDefault();
   if(capturing||preparing)return;
-  // Stop any other active context first
   if(activeCtx && activeCtx!==ctx) stopSession();
   activeCtx=ctx;
   preparing=true;
@@ -385,7 +447,6 @@ function micUp(e,ctx){
   if(!capturing)return;
   capturing=false;
   committed[ctx]=el.tx.textContent.trim();
-  // Auto-replace "today" with actual date for date field
   if(ctx==='fld' && FIELDS[curField].shortcut==='today'){
     committed[ctx]=replaceTodayNow(committed[ctx],'today');
     el.tx.textContent=committed[ctx];
@@ -423,8 +484,7 @@ function startSession(ctx, el){
       for(let i=0;i<e.results.length;i++) txt+=e.results[i][0].transcript;
       const base=committed[ctx];
       const full=base?base+' '+txt:txt;
-      if(ctx==='obs'||ctx==='fu') el.tx.textContent=full;
-      else el.tx.textContent=full;
+      el.tx.textContent=full;
     };
     recog.onerror=(e)=>{
       if(e.error==='not-allowed'||e.error==='service-not-allowed'){
@@ -454,9 +514,9 @@ function nowString(){
   const d=new Date();
   return d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
 }
-function replaceTodayNow(text, type){
-  if(type==='today') return text.replace(/\btoday\b/gi, todayString());
-  if(type==='now')   return text.replace(/\bnow\b/gi,   nowString());
+function replaceTodayNow(text,type){
+  if(type==='today') return text.replace(/\btoday\b/gi,todayString());
+  if(type==='now')   return text.replace(/\bnow\b/gi,nowString());
   return text;
 }
 function fillShortcut(){
@@ -539,7 +599,6 @@ function renderField(){
   document.getElementById('fld-tx').textContent=ex;
   committed.fld=ex;
   setStatus('fld-status','','');
-  // Show/hide shortcut button
   const sb=document.getElementById('fld-shortcut');
   if(f.shortcut){
     sb.style.display='block';
@@ -564,41 +623,7 @@ function nextField(){
   renderField();
   setTimeout(()=>speak(FIELDS[curField].q),300);
 }
-function skipField(){
-  stopSession();
-  curField++;
-  if(curField>=FIELDS.length){renderObs();showScreen('screen-obs');return;}
-  renderField();
-  setTimeout(()=>speak(FIELDS[curField].q),300);
-}
 function goBackToFields(){stopSession();curField=FIELDS.length-1;renderField();showScreen('screen-field');}
-
-// ── DEBUG ─────────────────────────────────────────────────────
-function showDebug(){
-  const ids=['obs-modal','obs-modal .modal-sheet','obs-modal .modal-scroll','obs-modal .modal-footer','obs-tx-box','obs-tx'];
-  const lines=ids.map(sel=>{
-    const el=document.querySelector(sel);
-    if(!el) return `${sel}: NOT FOUND`;
-    const cs=window.getComputedStyle(el);
-    const r=el.getBoundingClientRect();
-    return `<b>${sel.replace('obs-modal ','')}:</b> `+
-      `rect h=${Math.round(r.height)} `+
-      `scroll h=${el.scrollHeight} `+
-      `overflow=${cs.overflow}/${cs.overflowY} `+
-      `display=${cs.display} `+
-      `flex=${cs.flex}`;
-  });
-  let panel=document.getElementById('dbg-panel');
-  if(!panel){
-    panel=document.createElement('div');
-    panel.id='dbg-panel';
-    panel.style.cssText='position:fixed;top:0;left:0;right:0;z-index:9999;background:rgba(0,0,0,0.85);color:#0f0;font:11px monospace;padding:8px;max-height:50vh;overflow-y:auto;-webkit-overflow-scrolling:touch;';
-    panel.innerHTML='<button onclick="document.getElementById(\'dbg-panel\').remove()" style="float:right;background:#c00;color:#fff;border:none;padding:2px 8px;border-radius:4px;font-size:11px;">✕</button>'+lines.join('<br>');
-    document.body.appendChild(panel);
-  } else {
-    panel.innerHTML='<button onclick="document.getElementById(\'dbg-panel\').remove()" style="float:right;background:#c00;color:#fff;border:none;padding:2px 8px;border-radius:4px;font-size:11px;">✕</button>'+lines.join('<br>');
-  }
-}
 
 // ── OBSERVATIONS ─────────────────────────────────────────────
 function openObsModal(){
@@ -621,31 +646,20 @@ function saveObs(){
   const text=document.getElementById('obs-tx').textContent.trim();
   if(!text){setStatus('obs-status','Please add a description first.','err');return;}
   const followup=document.getElementById('fu-tx').textContent.trim();
-  observations.push({
-    description:text,
-    followup:followup||null,
-    photos:[...curObsPhotos]
-  });
+  observations.push({description:text,followup:followup||null,photos:[...curObsPhotos]});
   closeObsModal();
   renderObs();
 }
 function delObs(i){observations.splice(i,1);renderObs();}
 
-// Photos
 function photoSelected(e){
   const file=e.target.files[0];if(!file)return;
   const reader=new FileReader();
-  reader.onload=(ev)=>{
-    curObsPhotos.push({filename:file.name,dataUrl:ev.target.result});
-    renderPhotoGrid();
-  };
+  reader.onload=(ev)=>{curObsPhotos.push({filename:file.name,dataUrl:ev.target.result});renderPhotoGrid();};
   reader.readAsDataURL(file);
-  e.target.value=''; // reset so same file can be re-selected
+  e.target.value='';
 }
-function removeObsPhoto(i){
-  curObsPhotos.splice(i,1);
-  renderPhotoGrid();
-}
+function removeObsPhoto(i){curObsPhotos.splice(i,1);renderPhotoGrid();}
 function renderPhotoGrid(){
   const grid=document.getElementById('obs-photo-grid');
   let html=curObsPhotos.map((p,i)=>`
