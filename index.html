@@ -484,9 +484,10 @@ function restoreDraft(){
 
 // ── WELCOME ──────────────────────────────────────────────────
 function startReport(){
-  // Check if there's a live draft — warn before wiping
-  if(hasDraftData()){
-    if(!confirm('Start a new report? Your current draft will be cleared.')) return;
+  // Check localStorage directly — in-memory state may be empty on the welcome screen
+  const draftExists = !!localStorage.getItem(STORAGE_KEY);
+  if(draftExists){
+    if(!confirm('Start a new report? Your saved draft will be cleared.')) return;
   }
   reportData   = {};
   observations = [];
