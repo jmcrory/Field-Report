@@ -141,6 +141,12 @@
   @keyframes spin{to{transform:rotate(360deg);}}
   @keyframes pop{from{transform:scale(.5);opacity:0;}to{transform:scale(1);opacity:1;}}
 
+  /* ── REPORT # VALIDATION ── */
+  .btn-override{background:none;border:1px solid var(--warning);border-radius:100px;padding:4px 12px;font-size:10px;font-family:var(--mono);color:var(--warning);cursor:pointer;white-space:nowrap;font-weight:700;touch-action:manipulation;}
+  .btn-override:active{background:var(--warning);color:#fff;}
+  .field-footer-hint{font-size:11px;font-family:var(--mono);color:var(--warning);text-align:center;margin-top:6px;min-height:16px;}
+  .btn-nxt:disabled{opacity:.4;cursor:not-allowed;}
+
   /* ── RESTORE BANNER ── */
   .restore-banner{background:var(--accent);color:#fff;padding:14px 20px;font-size:13px;font-family:var(--mono);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
   .restore-banner button{background:#fff;color:var(--accent);border:none;border-radius:100px;padding:8px 16px;font-size:12px;font-weight:700;font-family:var(--mono);cursor:pointer;white-space:nowrap;}
@@ -190,8 +196,11 @@
     <div class="field-group">
       <div class="field-group-hdr"><div class="field-group-title">Project</div></div>
       <div class="field-item">
-        <div class="field-label">Report #</div>
-        <input class="field-input" id="f-report_number" type="text" placeholder="e.g. 2026-001" autocomplete="off" oninput="autosave()">
+        <div class="field-label">
+          <span>Report #</span>
+          <button class="btn-override" id="rn-override-btn" style="display:none;" onclick="overrideReportNum()">Override ✓</button>
+        </div>
+        <input class="field-input" id="f-report_number" type="text" placeholder="e.g. 1, 2, 3…" autocomplete="off" oninput="onReportNumInput()">
       </div>
       <div class="field-item">
         <div class="field-label">Project Name</div>
@@ -266,7 +275,8 @@
 
   </div>
   <div class="field-footer">
-    <button class="btn-nxt" style="width:100%;" onclick="goToObs()">Next: Observations →</button>
+    <button class="btn-nxt" id="fields-next-btn" style="width:100%;" onclick="goToObs()">Next: Observations →</button>
+    <div class="field-footer-hint" id="fields-next-hint"></div>
   </div>
 </div>
 
@@ -297,11 +307,11 @@
       <input type="hidden" id="obs-edit-idx" value="-1">
 
       <div class="modal-section-lbl">Item of Note <span style="color:var(--danger);">*</span></div>
-      <textarea class="modal-textarea" id="obs-tx" placeholder="Describe what you observed…" rows="4"></textarea>
+      <textarea class="modal-textarea" id="obs-tx" placeholder="Describe what you observed…" rows="1" style="min-height:44px;"></textarea>
       <div class="status err" id="obs-status"></div>
 
       <div class="modal-section-lbl">Follow-Up / Action Required</div>
-      <textarea class="modal-textarea" id="fu-tx" placeholder="Optional — any required actions or follow-up…" rows="3"></textarea>
+      <textarea class="modal-textarea" id="fu-tx" placeholder="Optional — any required actions or follow-up…" rows="1" style="min-height:44px;"></textarea>
 
       <div class="modal-section-lbl">Photos</div>
       <input type="file" id="obs-photo-input" accept="image/*" multiple onchange="photoSelected(event)">
@@ -371,10 +381,11 @@
 <div class="screen" id="screen-success">
   <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 32px;gap:20px;text-align:center;">
     <div style="width:72px;height:72px;border-radius:50%;background:var(--accent-dim);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:32px;animation:pop .4s cubic-bezier(.34,1.56,.64,1);color:var(--accent);">✓</div>
-    <h2 style="font-size:24px;font-weight:800;color:var(--text);">Report Ready</h2>
+    <h2 style="font-size:24px;font-weight:800;color:var(--text);">Report Exported</h2>
     <p style="font-size:13px;font-family:var(--mono);color:var(--muted);line-height:1.7;max-width:280px;" id="exp-detail">Your zip file is ready.</p>
   </div>
-  <div style="padding:20px 24px 36px;border-top:1px solid var(--border);display:flex;justify-content:center;">
+  <div style="padding:20px 24px 36px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:12px;align-items:center;">
+    <button class="btn-exp" onclick="goToReview()">← Back to Report</button>
     <button class="btn-rst" onclick="confirmRestart()">Start New Report</button>
   </div>
 </div>
@@ -396,6 +407,7 @@ let reportData    = {};
 let observations  = [];   // [{description, followup, photos:[{filename,dataUrl}]}]
 let curObsPhotos  = [];
 let sitePhotos    = [];   // [{filename, dataUrl}]
+let reportNumOverridden = false; // tracks if user has approved a non-integer report #
 
 // ── INIT ─────────────────────────────────────────────────────
 (function(){
@@ -523,6 +535,9 @@ function populateFormFromData(){
     const el = document.getElementById('f-'+k);
     if(el) el.value = reportData[k] || '';
   });
+  // Re-run report # validation in case restored value is non-integer
+  reportNumOverridden = false;
+  onReportNumInput();
 }
 
 function todayString(){
@@ -544,7 +559,48 @@ function fillNow(){
   autosave();
 }
 
-// ── OBSERVATIONS ─────────────────────────────────────────────
+// ── REPORT # VALIDATION ──────────────────────────────────────
+function isInteger(val){
+  return /^\d+$/.test(val.trim());
+}
+
+function onReportNumInput(){
+  const val = document.getElementById('f-report_number').value.trim();
+  const overrideBtn  = document.getElementById('rn-override-btn');
+  const nextBtn      = document.getElementById('fields-next-btn');
+  const nextHint     = document.getElementById('fields-next-hint');
+
+  if(!val){
+    // Empty — reset everything
+    reportNumOverridden = false;
+    overrideBtn.style.display = 'none';
+    nextBtn.disabled = false;
+    nextHint.textContent = '';
+  } else if(isInteger(val)){
+    // Valid integer — reset override, clear warning
+    reportNumOverridden = false;
+    overrideBtn.style.display = 'none';
+    nextBtn.disabled = false;
+    nextHint.textContent = '';
+  } else {
+    // Non-integer — show override button, block Next unless already overridden
+    overrideBtn.style.display = 'inline-block';
+    if(!reportNumOverridden){
+      nextBtn.disabled = true;
+      nextHint.textContent = 'Confirm Report # format to continue.';
+    }
+  }
+  autosave();
+}
+
+function overrideReportNum(){
+  reportNumOverridden = true;
+  document.getElementById('rn-override-btn').style.display = 'none';
+  document.getElementById('fields-next-btn').disabled = false;
+  document.getElementById('fields-next-hint').textContent = '';
+}
+
+
 function openObsModal(editIdx){
   const isEdit = (editIdx !== undefined && editIdx >= 0);
   document.getElementById('obs-edit-idx').value = isEdit ? editIdx : -1;
@@ -903,8 +959,7 @@ async function exportReport(){
     setTimeout(()=>URL.revokeObjectURL(url),5000);
     document.getElementById('exp-detail').textContent=
       `Zip contains report.json, ${obsPhotoCount} observation photo${obsPhotoCount!==1?'s':''} in photos/obs/, and ${sitePhotos.length} site photo${sitePhotos.length!==1?'s':''} in photos/site/. Save to Files or share via AirDrop.`;
-    // Clear the draft after successful export
-    clearDraft();
+    // Draft intentionally NOT cleared here — user can return to report and re-export
     showScreen('screen-success');
   }catch(err){
     msg.textContent=`Error: ${err.message}. Try again.`;
