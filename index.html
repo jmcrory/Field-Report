@@ -200,7 +200,7 @@
           <span>Report #</span>
           <button class="btn-override" id="rn-override-btn" style="display:none;" onclick="overrideReportNum()">Override ✓</button>
         </div>
-        <input class="field-input" id="f-report_number" type="text" placeholder="e.g. 1, 2, 3…" autocomplete="off" oninput="onReportNumInput()">
+        <input class="field-input" id="f-report_number" type="text" placeholder="e.g. 1, 2, 3…" autocomplete="off" oninput="onReportNumInput()" onblur="onReportNumBlur()">
       </div>
       <div class="field-item">
         <div class="field-label">Project Name</div>
@@ -572,13 +572,12 @@ const WORD_TO_NUM = {
 };
 
 function wordToInteger(val){
-  const lower = val.trim().toLowerCase();
-  if(WORD_TO_NUM.hasOwnProperty(lower)) return String(WORD_TO_NUM[lower]);
+  const lower = val.trim().toLowerCase().replace(/[^a-z0-9]/g, ' ');
+  const words = lower.split(/\s+/);
+  for(const word of words){
+    if(WORD_TO_NUM.hasOwnProperty(word)) return String(WORD_TO_NUM[word]);
+  }
   return null;
-}
-
-function isInteger(val){
-  return /^\d+$/.test(val.trim());
 }
 
 function onReportNumBlur(){
@@ -591,7 +590,13 @@ function onReportNumBlur(){
 }
 
 function onReportNumInput(){
-  const val = document.getElementById('f-report_number').value.trim();
+  const el  = document.getElementById('f-report_number');
+  // Scan value for any word-number and replace entire field with just the digit
+  const converted = wordToInteger(el.value);
+  if(converted !== null){
+    el.value = converted;
+  }
+  const val = el.value.trim();
   const overrideBtn  = document.getElementById('rn-override-btn');
   const nextBtn      = document.getElementById('fields-next-btn');
   const nextHint     = document.getElementById('fields-next-hint');
