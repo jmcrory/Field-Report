@@ -540,9 +540,9 @@ function populateFormFromData(){
     const el = document.getElementById('f-'+k);
     if(el) el.value = reportData[k] || '';
   });
-  // Re-run report # validation in case restored value is non-integer
+  // Update report # UI from stored value without re-processing the field
   reportNumOverridden = false;
-  onReportNumInput();
+  updateReportNumUI(reportData['report_number'] || '');
 }
 
 function todayString(){
@@ -579,6 +579,10 @@ function wordToInteger(val){
     if(WORD_TO_NUM.hasOwnProperty(word)) return String(WORD_TO_NUM[word]);
   }
   return null;
+}
+
+function isInteger(val){
+  return /^\d+$/.test(val.trim());
 }
 
 
