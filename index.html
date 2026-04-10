@@ -200,7 +200,7 @@
           <span>Report #</span>
           <button class="btn-override" id="rn-override-btn" style="display:none;" onclick="overrideReportNum()">Override ✓</button>
         </div>
-        <input class="field-input" id="f-report_number" type="text" placeholder="e.g. 1, 2, 3…" autocomplete="off" oninput="onReportNumInput()" onblur="onReportNumBlur()">
+        <input class="field-input" id="f-report_number" type="text" placeholder="e.g. 1, 2, 3…" autocomplete="off" oninput="onReportNumInput()">
       </div>
       <div class="field-item">
         <div class="field-label">Project Name</div>
@@ -580,14 +580,6 @@ function wordToInteger(val){
   return null;
 }
 
-function onReportNumBlur(){
-  const el  = document.getElementById('f-report_number');
-  const converted = wordToInteger(el.value);
-  if(converted !== null){
-    el.value = converted;
-  }
-  onReportNumInput();
-}
 
 function onReportNumInput(){
   const el  = document.getElementById('f-report_number');
