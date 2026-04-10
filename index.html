@@ -200,7 +200,7 @@
           <span>Report #</span>
           <button class="btn-override" id="rn-override-btn" style="display:none;" onclick="overrideReportNum()">Override ✓</button>
         </div>
-        <input class="field-input" id="f-report_number" type="text" placeholder="e.g. 1, 2, 3…" autocomplete="off" oninput="onReportNumInput()">
+        <input class="field-input" id="f-report_number" type="text" placeholder="e.g. 1, 2, 3…" autocomplete="off" oninput="onReportNumInput()" onblur="onReportNumBlur()">
       </div>
       <div class="field-item">
         <div class="field-label">Project Name</div>
@@ -525,6 +525,7 @@ function goToReview(){
 // ── FIELDS ───────────────────────────────────────────────────
 function collectFieldsFromForm(){
   FIELD_KEYS.forEach(k => {
+    if(k === 'report_number') return; // managed separately by onReportNumInput
     const el = document.getElementById('f-'+k);
     if(el) {
       const v = el.value.trim();
@@ -583,37 +584,51 @@ function wordToInteger(val){
 
 function onReportNumInput(){
   const el  = document.getElementById('f-report_number');
-  // Scan value for any word-number and replace entire field with just the digit
-  const converted = wordToInteger(el.value);
-  if(converted !== null){
-    el.value = converted;
-  }
-  const val = el.value.trim();
-  const overrideBtn  = document.getElementById('rn-override-btn');
-  const nextBtn      = document.getElementById('fields-next-btn');
-  const nextHint     = document.getElementById('fields-next-hint');
+  const raw = el.value;
+
+  // Silently store the converted value in reportData without touching el.value
+  const converted = wordToInteger(raw);
+  const finalVal  = converted !== null ? converted : raw.trim();
+
+  if(finalVal) reportData['report_number'] = finalVal;
+  else delete reportData['report_number'];
+
+  updateReportNumUI(finalVal);
+  saveDraft();
+}
+
+function onReportNumBlur(){
+  const el  = document.getElementById('f-report_number');
+  // Let iOS fully commit its text first, then update the field from reportData
+  setTimeout(()=>{
+    const stored = reportData['report_number'] || '';
+    el.value = stored;
+    updateReportNumUI(stored);
+  }, 0);
+}
+
+function updateReportNumUI(val){
+  const overrideBtn = document.getElementById('rn-override-btn');
+  const nextBtn     = document.getElementById('fields-next-btn');
+  const nextHint    = document.getElementById('fields-next-hint');
 
   if(!val){
-    // Empty — reset everything
     reportNumOverridden = false;
     overrideBtn.style.display = 'none';
     nextBtn.disabled = false;
     nextHint.textContent = '';
   } else if(isInteger(val)){
-    // Valid integer — reset override, clear warning
     reportNumOverridden = false;
     overrideBtn.style.display = 'none';
     nextBtn.disabled = false;
     nextHint.textContent = '';
   } else {
-    // Non-integer — show override button, block Next unless already overridden
     overrideBtn.style.display = 'inline-block';
     if(!reportNumOverridden){
       nextBtn.disabled = true;
       nextHint.textContent = 'Confirm Report # format to continue.';
     }
   }
-  autosave();
 }
 
 function overrideReportNum(){
@@ -622,7 +637,6 @@ function overrideReportNum(){
   document.getElementById('fields-next-btn').disabled = false;
   document.getElementById('fields-next-hint').textContent = '';
 }
-
 
 function openObsModal(editIdx){
   const isEdit = (editIdx !== undefined && editIdx >= 0);
