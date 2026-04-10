@@ -581,15 +581,16 @@ function isInteger(val){
   return /^\d+$/.test(val.trim());
 }
 
-function onReportNumInput(){
+function onReportNumBlur(){
   const el  = document.getElementById('f-report_number');
-  const raw = el.value;
-
-  // Attempt word-to-number conversion before validation
-  const converted = wordToInteger(raw);
+  const converted = wordToInteger(el.value);
   if(converted !== null){
     el.value = converted;
   }
+  onReportNumInput();
+}
+
+function onReportNumInput(){
   const val = document.getElementById('f-report_number').value.trim();
   const overrideBtn  = document.getElementById('rn-override-btn');
   const nextBtn      = document.getElementById('fields-next-btn');
