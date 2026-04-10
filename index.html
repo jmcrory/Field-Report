@@ -433,8 +433,12 @@ function autosave(){
 }
 
 function saveDraft(){
+  // Don't write a draft unless the user has actually entered something
+  if(!hasDraftData()){
+    clearDraft();
+    return;
+  }
   try {
-    // Site photos and obs photos can be large — store dataUrls
     const draft = {
       reportData,
       observations,
@@ -443,7 +447,6 @@ function saveDraft(){
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
   } catch(e){
-    // Storage full or unavailable — fail silently
     console.warn('Autosave failed:', e);
   }
 }
