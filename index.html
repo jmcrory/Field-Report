@@ -345,7 +345,13 @@
     <div style="padding:24px 24px 8px;display:flex;flex-direction:column;gap:10px;">
       <p style="font-size:13px;color:var(--muted);font-family:var(--mono);line-height:1.6;">Add all photos from this visit. These will be exported to <span style="color:var(--accent);font-weight:700;">photos/site/</span> in the zip file — duplicates are fine.</p>
       <input type="file" id="site-photo-input" accept="image/*" multiple onchange="sitePhotoSelected(event)" style="display:none;">
-      <button class="btn-obs" onclick="document.getElementById('site-photo-input').click()">+ Add Site Photos</button>
+      <button class="btn-obs" id="site-photo-btn" onclick="document.getElementById('site-photo-input').click()">+ Add Site Photos</button>
+      <div id="site-photo-progress" style="display:none;flex-direction:column;gap:8px;">
+        <div style="font-size:12px;font-family:var(--mono);color:var(--accent);" id="site-photo-progress-lbl">Processing photos…</div>
+        <div style="height:4px;background:var(--border);border-radius:4px;overflow:hidden;">
+          <div id="site-photo-progress-fill" style="height:100%;background:var(--accent);border-radius:4px;width:0%;transition:width .2s ease;"></div>
+        </div>
+      </div>
     </div>
     <div class="site-photo-count" id="site-photo-count"></div>
     <div class="site-photo-grid" id="site-photo-grid"></div>
@@ -818,14 +824,41 @@ function renderPhotoGrid(){
 function sitePhotoSelected(e){
   const files=Array.from(e.target.files);
   if(!files.length)return;
-  let loaded=0;
+
+  // Show progress bar, disable button
+  const btn      = document.getElementById('site-photo-btn');
+  const progress = document.getElementById('site-photo-progress');
+  const lbl      = document.getElementById('site-photo-progress-lbl');
+  const fill     = document.getElementById('site-photo-progress-fill');
+  btn.disabled   = true;
+  btn.style.opacity = '0.4';
+  progress.style.display = 'flex';
+  fill.style.width = '0%';
+  lbl.textContent = `Processing 0 of ${files.length}…`;
+
+  let loaded = 0;
   files.forEach(file=>{
     const reader=new FileReader();
     reader.onload=async(ev)=>{
       const resized = await resizePhoto(ev.target.result);
       sitePhotos.push({filename:file.name,dataUrl:resized});
       loaded++;
-      if(loaded===files.length){ renderSitePhotos(); saveDraft(); }
+      const pct = Math.round((loaded/files.length)*100);
+      fill.style.width = pct+'%';
+      lbl.textContent = loaded < files.length
+        ? `Processing ${loaded} of ${files.length}…`
+        : `Done — ${files.length} photo${files.length!==1?'s':''} added.`;
+      if(loaded===files.length){
+        renderSitePhotos();
+        saveDraft();
+        // Hide progress bar after a short pause
+        setTimeout(()=>{
+          progress.style.display='none';
+          fill.style.width='0%';
+          btn.disabled=false;
+          btn.style.opacity='1';
+        }, 1200);
+      }
     };
     reader.readAsDataURL(file);
   });
