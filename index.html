@@ -753,6 +753,38 @@ function renderObs(){
     </div>`).join('');
 }
 
+// ── PHOTO RESIZE ─────────────────────────────────────────────
+// Resize to max 1920px on longest side, 85% JPEG quality
+// Reduces typical iPhone photo from 4–8MB to 300–600KB
+const MAX_PHOTO_PX  = 1920;
+const PHOTO_QUALITY = 0.85;
+
+function resizePhoto(dataUrl){
+  return new Promise(resolve=>{
+    const img = new Image();
+    img.onload = ()=>{
+      let w = img.naturalWidth, h = img.naturalHeight;
+      if(w <= MAX_PHOTO_PX && h <= MAX_PHOTO_PX){
+        // Already small enough — re-encode at quality setting only
+        const c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        c.getContext('2d').drawImage(img, 0, 0);
+        resolve(c.toDataURL('image/jpeg', PHOTO_QUALITY));
+        return;
+      }
+      // Scale down preserving aspect ratio
+      if(w >= h){ h = Math.round(h * MAX_PHOTO_PX / w); w = MAX_PHOTO_PX; }
+      else       { w = Math.round(w * MAX_PHOTO_PX / h); h = MAX_PHOTO_PX; }
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve(c.toDataURL('image/jpeg', PHOTO_QUALITY));
+    };
+    img.onerror = ()=>resolve(dataUrl); // fallback: use original if resize fails
+    img.src = dataUrl;
+  });
+}
+
 // ── OBS PHOTOS ───────────────────────────────────────────────
 function photoSelected(e){
   const files=Array.from(e.target.files);
@@ -760,8 +792,9 @@ function photoSelected(e){
   let loaded=0;
   files.forEach(file=>{
     const reader=new FileReader();
-    reader.onload=(ev)=>{
-      curObsPhotos.push({filename:file.name,dataUrl:ev.target.result});
+    reader.onload=async(ev)=>{
+      const resized = await resizePhoto(ev.target.result);
+      curObsPhotos.push({filename:file.name,dataUrl:resized});
       loaded++;
       if(loaded===files.length) renderPhotoGrid();
     };
@@ -788,8 +821,9 @@ function sitePhotoSelected(e){
   let loaded=0;
   files.forEach(file=>{
     const reader=new FileReader();
-    reader.onload=(ev)=>{
-      sitePhotos.push({filename:file.name,dataUrl:ev.target.result});
+    reader.onload=async(ev)=>{
+      const resized = await resizePhoto(ev.target.result);
+      sitePhotos.push({filename:file.name,dataUrl:resized});
       loaded++;
       if(loaded===files.length){ renderSitePhotos(); saveDraft(); }
     };
@@ -830,8 +864,8 @@ const FIELD_GROUPS_REV = [
 ];
 
 function buildReview(){
-  // Sync any edits made directly on the fields form
-  collectFieldsFromForm();
+  // Do NOT call collectFieldsFromForm() here — fields screen may not be active
+  // reportData is always kept current via oninput handlers and goToObs()
 
   let html='';
 
@@ -971,8 +1005,9 @@ function addSitePhotosFromReview(e){
   let loaded=0;
   files.forEach(file=>{
     const reader=new FileReader();
-    reader.onload=(ev)=>{
-      sitePhotos.push({filename:file.name,dataUrl:ev.target.result});
+    reader.onload=async(ev)=>{
+      const resized = await resizePhoto(ev.target.result);
+      sitePhotos.push({filename:file.name,dataUrl:resized});
       loaded++;
       if(loaded===files.length){ buildReview(); saveDraft(); }
     };
