@@ -67,7 +67,7 @@
   .field-item:last-child{border-bottom:none;}
   .field-label{font-size:11px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.08em;display:flex;align-items:center;justify-content:space-between;gap:8px;}
   .field-input{font-size:16px;color:var(--text);font-family:var(--sans);outline:none;width:100%;border:none;background:transparent;line-height:1.5;padding:0;}
-  .field-input::placeholder{color:var(--muted);font-style:italic;}
+  .field-input::placeholder{color:#7a7975;font-style:italic;}
   .field-footer{padding:20px 24px 36px;border-top:1px solid var(--border);}
 
   /* ── OBSERVATIONS ── */
@@ -115,7 +115,7 @@
   .modal-section-lbl{font-size:11px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.1em;}
   .modal-textarea{width:100%;border:1px solid var(--border);border-radius:12px;padding:14px;font-size:15px;font-family:var(--sans);color:var(--text);background:var(--surface);outline:none;resize:vertical;min-height:80px;line-height:1.5;}
   .modal-textarea:focus{border-color:var(--accent);}
-  .modal-textarea::placeholder{color:var(--muted);font-style:italic;}
+  .modal-textarea::placeholder{color:#7a7975;font-style:italic;}
 
   /* ── REVIEW ── */
   .rev-body{flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:20px;}
@@ -125,12 +125,12 @@
   .rev-fld:last-child{border-bottom:none;}
   .rev-fld-lbl{font-size:10px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.1em;}
   .rev-fld-input{font-size:15px;line-height:1.5;border:none;background:transparent;outline:none;width:100%;font-family:var(--sans);color:var(--text);padding:0;resize:none;}
-  .rev-fld-input::placeholder{color:var(--muted);font-style:italic;}
+  .rev-fld-input::placeholder{color:#7a7975;font-style:italic;}
   .rev-obs-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;display:flex;gap:14px;align-items:flex-start;margin-bottom:10px;}
   .rev-obs-body{flex:1;display:flex;flex-direction:column;gap:8px;}
   .rev-obs-textarea{width:100%;border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:var(--sans);color:var(--text);background:var(--surface2);outline:none;resize:vertical;line-height:1.5;}
   .rev-obs-textarea:focus{border-color:var(--accent);background:var(--surface);}
-  .rev-obs-textarea::placeholder{color:var(--muted);font-style:italic;}
+  .rev-obs-textarea::placeholder{color:#7a7975;font-style:italic;}
 
   /* ── STATUS ── */
   .status{font-size:12px;font-family:var(--mono);color:var(--muted);text-align:center;min-height:18px;line-height:1.5;}
@@ -208,11 +208,11 @@
       </div>
       <div class="field-item">
         <div class="field-label">Project Number</div>
-        <input class="field-input" id="f-project_number" type="text" placeholder="e.g. PRJ-2026-042" autocomplete="off" oninput="autosave()">
+        <input class="field-input" id="f-project_number" type="text" placeholder="e.g. 26000" autocomplete="off" oninput="autosave()">
       </div>
       <div class="field-item">
         <div class="field-label">Location</div>
-        <input class="field-input" id="f-location" type="text" placeholder="Address, building name, or area" autocomplete="off" oninput="autosave()">
+        <input class="field-input" id="f-location" type="text" placeholder="City, State" autocomplete="off" oninput="autosave()">
       </div>
     </div>
 
@@ -311,7 +311,7 @@
       <div class="status err" id="obs-status"></div>
 
       <div class="modal-section-lbl">Follow-Up / Action Required</div>
-      <textarea class="modal-textarea" id="fu-tx" placeholder="Optional — any required actions or follow-up…" rows="1" style="min-height:44px;"></textarea>
+      <textarea class="modal-textarea" id="fu-tx" placeholder="Any required actions or follow-up…" rows="1" style="min-height:44px;"></textarea>
 
       <div class="modal-section-lbl">Photos</div>
       <input type="file" id="obs-photo-input" accept="image/*" multiple onchange="photoSelected(event)">
