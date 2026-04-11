@@ -8,6 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Field Report">
 <!-- v10 -->
 <title>Field Report</title>
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
 <style>
   :root {
     --bg:#e7e6de; --surface:#fff; --surface2:#f0efea;
@@ -187,7 +188,10 @@
 <!-- ── FIELDS ── -->
 <div class="screen" id="screen-field">
   <div class="hdr">
-    <div class="hdr-top"><span class="app-lbl">Field Report</span></div>
+    <div class="hdr-top">
+      <span class="app-lbl">Field Report</span>
+      <button onclick="goToWelcome()" style="background:none;border:none;color:rgba(255,255,255,0.7);font-size:12px;font-family:var(--mono);cursor:pointer;padding:4px 0;touch-action:manipulation;">⌂ Home</button>
+    </div>
     <h1>Report Details</h1>
   </div>
   <div class="form-body" id="form-body">
@@ -507,6 +511,14 @@ function showScreen(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   window.scrollTo(0,0);
+}
+
+function goToWelcome(){
+  collectFieldsFromForm();
+  saveDraft();
+  // Refresh the draft banner state before showing welcome
+  checkDraft();
+  showScreen('screen-welcome');
 }
 
 function goToObs(){
