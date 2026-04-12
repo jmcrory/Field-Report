@@ -845,7 +845,6 @@ function renderPhotoGrid(){
 function sitePhotoSelected(e){
   const files=Array.from(e.target.files);
   if(!files.length)return;
-  dbg('sitePhotoSelected: '+files.length+' file(s) selected');
 
   // Show progress bar, disable button
   const btn      = document.getElementById('site-photo-btn');
@@ -870,14 +869,10 @@ function sitePhotoSelected(e){
       lbl.textContent = loaded < files.length
         ? `Processing ${loaded} of ${files.length}…`
         : `Done — ${files.length} photo${files.length!==1?'s':''} added.`;
-      dbg('photo '+loaded+'/'+files.length+' done ('+file.name+')');
       if(loaded===files.length){
-        dbg('all photos processed — calling renderSitePhotos + saveDraft');
         renderSitePhotos();
         saveDraft();
-        // Hide progress bar after a short pause
         setTimeout(()=>{
-          dbg('setTimeout fired — hiding progress bar');
           progress.style.display='none';
           fill.style.width='0%';
           btn.disabled=false;
