@@ -469,7 +469,8 @@ document.addEventListener('visibilitychange',()=>{
 
 function hasDraftData(){
   const hasFields = FIELD_KEYS.some(k => (reportData[k]||'').trim());
-  return hasFields || observations.length > 0 || sitePhotos.length > 0;
+  return hasFields || observations.length > 0;
+  // Note: sitePhotos deliberately excluded — not persisted to localStorage
 }
 
 // ── DRAFT PERSISTENCE ────────────────────────────────────────
@@ -488,11 +489,12 @@ function saveDraft(){
     const draft = {
       reportData,
       observations,
-      sitePhotos,
+      // sitePhotos deliberately NOT saved — too large for localStorage
+      // User will need to re-add site photos if page is refreshed
       savedAt: new Date().toISOString()
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
-    dbg('saveDraft() OK — '+observations.length+' obs, '+sitePhotos.length+' site photos, fields: '+Object.keys(reportData).length);
+    dbg('saveDraft() OK — '+observations.length+' obs, fields: '+Object.keys(reportData).length);
   } catch(e){
     dbg('saveDraft() FAILED: '+e.message);
     console.warn('Autosave failed:', e);
@@ -521,7 +523,7 @@ function restoreDraft(){
     const draft = JSON.parse(raw);
     reportData   = draft.reportData   || {};
     observations = draft.observations || [];
-    sitePhotos   = draft.sitePhotos   || [];
+    sitePhotos   = []; // not persisted — user re-adds after restore
     // Go straight to fields page, populated
     populateFormFromData();
     renderObs();
@@ -538,7 +540,7 @@ function startReport(){
   // Check localStorage directly — in-memory state may be empty on the welcome screen
   const draftExists = !!localStorage.getItem(STORAGE_KEY);
   if(draftExists){
-    if(!confirm('Start a new report? Your saved draft will be cleared.')) return;
+    if(!confirm('Start a new report? Your saved draft will be cleared. Any site photos will also be lost.')) return;
   }
   reportData   = {};
   observations = [];
@@ -1134,7 +1136,7 @@ async function exportReport(){
 
 // ── RESTART ──────────────────────────────────────────────────
 function confirmRestart(){
-  if(!confirm('Start a new report? All current data will be cleared.')) return;
+  if(!confirm('Start a new report? All current data will be cleared. Any site photos will also be lost.')) return;
   reportData   = {};
   observations = [];
   sitePhotos   = [];
