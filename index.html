@@ -190,7 +190,7 @@
   <div class="hdr">
     <div class="hdr-top">
       <span class="app-lbl">Field Report</span>
-      <button onclick="goToWelcome()" style="background:none;border:none;color:rgba(255,255,255,0.7);font-size:12px;font-family:var(--mono);cursor:pointer;padding:4px 0;touch-action:manipulation;">⌂ Home</button>
+      <button onclick="safeGoHome()" style="background:none;border:none;color:rgba(255,255,255,0.7);font-size:12px;font-family:var(--mono);cursor:pointer;padding:4px 0;touch-action:manipulation;">⌂ Home</button>
     </div>
     <h1>Report Details</h1>
   </div>
@@ -280,7 +280,7 @@
   </div>
   <div class="field-footer">
     <div class="btn-row">
-      <button class="btn-sec" onclick="goToWelcome()">⌂ Home</button>
+      <button class="btn-sec" onclick="safeGoHome()">⌂ Home</button>
       <button class="btn-nxt" id="fields-next-btn" style="flex:3;" onclick="goToObs()">Next: Observations →</button>
     </div>
     <div class="field-footer-hint" id="fields-next-hint"></div>
@@ -290,11 +290,12 @@
 <!-- ── OBSERVATIONS ── -->
 <div class="screen" id="screen-obs">
   <div class="hdr">
-    <div class="hdr-top"><span class="app-lbl">Field Report</span><button onclick="goToWelcome()" style="background:none;border:none;color:rgba(255,255,255,0.7);font-size:12px;font-family:var(--mono);cursor:pointer;padding:4px 0;touch-action:manipulation;">⌂ Home</button></div>
+    <div class="hdr-top"><span class="app-lbl">Field Report</span><button onclick="safeGoHome()" style="background:none;border:none;color:rgba(255,255,255,0.7);font-size:12px;font-family:var(--mono);cursor:pointer;padding:4px 0;touch-action:manipulation;">⌂ Home</button></div>
     <h1>Observations</h1>
   </div>
   <div style="flex:1;padding:24px;display:flex;flex-direction:column;gap:20px;overflow-y:auto;">
     <div style="font-size:13px;color:var(--muted);font-family:var(--mono);">Add each item observed. Each will be numbered in the final report.</div>
+    <div style="font-size:11px;color:var(--muted);font-family:var(--mono);line-height:1.6;">⚠︎ Observation photos are not saved to your draft. If you return Home or refresh, photos will need to be re-added. Notes and text are always saved.</div>
     <div class="obs-list" id="obs-list"><div class="obs-empty">No observations yet.<br>Tap below to add one.</div></div>
     <button class="obs-add" onclick="openObsModal()">+ Add Observation</button>
   </div>
@@ -338,12 +339,13 @@
 <!-- ── SITE PHOTOS ── -->
 <div class="screen" id="screen-site-photos">
   <div class="hdr">
-    <div class="hdr-top"><span class="app-lbl">Field Report</span><button onclick="goToWelcome()" style="background:none;border:none;color:rgba(255,255,255,0.7);font-size:12px;font-family:var(--mono);cursor:pointer;padding:4px 0;touch-action:manipulation;">⌂ Home</button></div>
+    <div class="hdr-top"><span class="app-lbl">Field Report</span><button onclick="safeGoHome()" style="background:none;border:none;color:rgba(255,255,255,0.7);font-size:12px;font-family:var(--mono);cursor:pointer;padding:4px 0;touch-action:manipulation;">⌂ Home</button></div>
     <h1>Site Photos</h1>
   </div>
   <div style="flex:1;overflow-y:auto;display:flex;flex-direction:column;">
     <div style="padding:24px 24px 8px;display:flex;flex-direction:column;gap:10px;">
       <p style="font-size:13px;color:var(--muted);font-family:var(--mono);line-height:1.6;">Add all photos from this visit. These will be exported to <span style="color:var(--accent);font-weight:700;">photos/site/</span> in the zip file — duplicates are fine.</p>
+      <p style="font-size:11px;color:var(--muted);font-family:var(--mono);line-height:1.6;">⚠︎ Site photos are not saved to your draft. If you return Home or refresh, they will need to be re-added.</p>
       <input type="file" id="site-photo-input" accept="image/*" multiple onchange="sitePhotoSelected(event)" style="display:none;">
       <button class="btn-obs" id="site-photo-btn" onclick="document.getElementById('site-photo-input').click()">+ Add Site Photos</button>
       <div id="site-photo-progress" style="display:none;flex-direction:column;gap:8px;">
@@ -355,12 +357,6 @@
     </div>
     <div class="site-photo-count" id="site-photo-count"></div>
     <div class="site-photo-grid" id="site-photo-grid"></div>
-    <!-- ── DEBUG LOG — remove before production ── -->
-    <div style="margin:12px 24px;background:#1a1a1a;border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px;">
-      <div style="font-size:10px;font-family:var(--mono);color:#aaa;letter-spacing:.1em;text-transform:uppercase;">Debug Log</div>
-      <div id="debug-log" style="font-size:11px;font-family:var(--mono);color:#7fff7f;line-height:1.7;max-height:200px;overflow-y:auto;white-space:pre-wrap;"></div>
-      <button onclick="document.getElementById('debug-log').textContent=''" style="align-self:flex-start;background:none;border:1px solid #555;color:#aaa;border-radius:100px;padding:4px 12px;font-size:10px;font-family:var(--mono);cursor:pointer;">Clear</button>
-    </div>
   </div>
   <div class="obs-footer">
     <div class="btn-row">
@@ -373,7 +369,7 @@
 <!-- ── REVIEW ── -->
 <div class="screen" id="screen-review">
   <div class="hdr">
-    <div class="hdr-top"><span class="app-lbl">Field Report</span><button onclick="goToWelcome()" style="background:none;border:none;color:rgba(255,255,255,0.7);font-size:12px;font-family:var(--mono);cursor:pointer;padding:4px 0;touch-action:manipulation;">⌂ Home</button></div>
+    <div class="hdr-top"><span class="app-lbl">Field Report</span><button onclick="safeGoHome()" style="background:none;border:none;color:rgba(255,255,255,0.7);font-size:12px;font-family:var(--mono);cursor:pointer;padding:4px 0;touch-action:manipulation;">⌂ Home</button></div>
     <h1>Review &amp; Export</h1>
   </div>
   <div class="rev-body" id="rev-body"></div>
@@ -387,7 +383,7 @@
 <!-- ── EXPORTING ── -->
 <div class="screen" id="screen-export">
   <div class="hdr">
-    <div class="hdr-top"><span class="app-lbl">Field Report</span><button onclick="goToWelcome()" style="background:none;border:none;color:rgba(255,255,255,0.7);font-size:12px;font-family:var(--mono);cursor:pointer;padding:4px 0;touch-action:manipulation;">⌂ Home</button></div>
+    <div class="hdr-top"><span class="app-lbl">Field Report</span><button onclick="safeGoHome()" style="background:none;border:none;color:rgba(255,255,255,0.7);font-size:12px;font-family:var(--mono);cursor:pointer;padding:4px 0;touch-action:manipulation;">⌂ Home</button></div>
     <h1>Exporting…</h1>
   </div>
   <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 32px;gap:20px;text-align:center;">
@@ -443,18 +439,6 @@ let curObsPhotos  = [];
 let sitePhotos    = [];   // [{filename, dataUrl}]
 let reportNumOverridden = false; // tracks if user has approved a non-integer report #
 
-// ── DEBUG LOG ────────────────────────────────────────────────
-function dbg(msg){
-  const el = document.getElementById('debug-log');
-  if(!el) return;
-  const t = new Date().toTimeString().slice(0,8);
-  el.textContent += '['+t+'] '+msg+'\n';
-  el.scrollTop = el.scrollHeight;
-}
-document.addEventListener('visibilitychange',()=>{
-  dbg('visibilitychange fired — hidden='+document.hidden);
-});
-
 // ── INIT ─────────────────────────────────────────────────────
 (function(){
   checkDraft();
@@ -488,15 +472,18 @@ function saveDraft(){
   try {
     const draft = {
       reportData,
-      observations,
+      // Strip photos from observations before saving — too large for localStorage
+      // Observation text and follow-up always persist; photos must be re-added after restore
+      observations: observations.map(o=>({
+        description: o.description,
+        followup:    o.followup,
+        photos:      []
+      })),
       // sitePhotos deliberately NOT saved — too large for localStorage
-      // User will need to re-add site photos if page is refreshed
       savedAt: new Date().toISOString()
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
-    dbg('saveDraft() OK — '+observations.length+' obs, fields: '+Object.keys(reportData).length);
   } catch(e){
-    dbg('saveDraft() FAILED: '+e.message);
     console.warn('Autosave failed:', e);
   }
 }
@@ -554,14 +541,24 @@ function startReport(){
 
 // ── NAV ──────────────────────────────────────────────────────
 function showScreen(id){
-  dbg('showScreen('+id+') — caller: '+(new Error().stack.split('\n')[1]||'').trim().slice(0,80));
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   window.scrollTo(0,0);
 }
 
+function hasAnyPhotos(){
+  const hasObsPhotos = observations.some(o => o.photos && o.photos.length > 0);
+  return hasObsPhotos || sitePhotos.length > 0;
+}
+
+function safeGoHome(){
+  if(hasAnyPhotos()){
+    if(!confirm('Return to Home? Your field data and observation notes will be saved, but all photos will be removed from your draft and will need to be re-added.')) return;
+  }
+  goToWelcome();
+}
+
 function goToWelcome(){
-  dbg('goToWelcome() called');
   collectFieldsFromForm();
   saveDraft();
   // Refresh the draft banner state before showing welcome
