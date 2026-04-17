@@ -416,7 +416,7 @@
       <textarea class="modal-textarea" id="fu-tx" placeholder="Any required actions or follow-up…" rows="1" style="min-height:44px;"></textarea>
 
       <div class="modal-section-lbl">Photos</div>
-      <div style="font-size:13px;color:var(--text);font-family:var(--mono);line-height:1.7;background:#fff3cd;border:1px solid #e6a817;border-radius:10px;padding:10px 14px;"><strong>DO NOT TAKE PHOTOS FROM WITHIN THIS APPLICATION.</strong> Use the camera app on your device to ensure the photos are stored. Any photos taken directly through this app are not saved to your Camera Roll and will be lost on refresh.</div>
+      <div style="font-size:13px;color:var(--text);font-family:var(--mono);line-height:1.6;">⚠︎ DO NOT TAKE PHOTOS FROM WITHIN THIS APP.</div>
       <input type="file" id="obs-photo-input" accept="image/*" multiple onchange="photoSelected(event)">
       <div class="photo-grid" id="obs-photo-grid">
         <button class="btn-add-photo" onclick="document.getElementById('obs-photo-input').click()">+</button>
@@ -441,7 +441,7 @@
     <div style="padding:24px 24px 8px;display:flex;flex-direction:column;gap:10px;">
       <p style="font-size:13px;color:var(--muted);font-family:var(--mono);line-height:1.6;">Add all photos from this visit. These will be exported to <span style="color:var(--accent);font-weight:700;">photos/site/</span> in the zip file — duplicates are fine.</p>
       <p style="font-size:11px;color:var(--muted);font-family:var(--mono);line-height:1.6;">⚠︎ Site photos are not saved to your draft. If you return Home or refresh, they will need to be re-added.</p>
-      <p style="font-size:13px;color:var(--text);font-family:var(--mono);line-height:1.7;background:#fff3cd;border:1px solid #e6a817;border-radius:10px;padding:10px 14px;"><strong>DO NOT TAKE PHOTOS FROM WITHIN THIS APPLICATION.</strong> Use the camera app on your device to ensure the photos are stored. Any photos taken directly through this app are not saved to your Camera Roll and will be lost on refresh.</p>
+      <p style="font-size:13px;color:var(--text);font-family:var(--mono);line-height:1.6;">⚠︎ DO NOT TAKE PHOTOS FROM WITHIN THIS APP.</p>
       <input type="file" id="site-photo-input" accept="image/*" multiple onchange="sitePhotoSelected(event)" style="display:none;">
       <button class="btn-obs" id="site-photo-btn" onclick="document.getElementById('site-photo-input').click()">+ Add Site Photos</button>
       <div id="site-photo-progress" style="display:none;flex-direction:column;gap:8px;">
@@ -717,6 +717,8 @@ function loadNamedDraft(id){
 
 // ── WELCOME SCREEN RENDERING ─────────────────────────────────
 function renderWelcomeScreen(){
+  // Reset banner before re-checking so stale state doesn't persist
+  document.getElementById('restore-wrap').style.display = 'none';
   checkDraft();
   renderDraftsList();
 }
@@ -746,9 +748,18 @@ function renderDraftsList(){
         <div class="draft-row-name">${escHtml(d.displayName)}</div>
         <div class="draft-row-time">${date}</div>
       </div>
-      <button class="draft-row-del" onclick="event.stopPropagation();confirmDeleteNamedDraft('${id}')" title="Delete">×</button>
+      <button class="draft-row-del" data-draft-id="${id}" title="Delete">×</button>
     </div>`;
   }).join('');
+
+  // Use event delegation for delete buttons — avoids iOS confirm suppression from stopPropagation
+  list.onclick = function(e){
+    const delBtn = e.target.closest('[data-draft-id]');
+    if(delBtn){
+      e.stopPropagation();
+      confirmDeleteNamedDraft(delBtn.dataset.draftId);
+    }
+  };
 
   // Show soft cap warning if approaching limit
   if(keys.length >= MAX_NAMED_DRAFTS - 5){
@@ -814,7 +825,7 @@ function showScreen(id){
 }
 
 function hasAnyPhotos(){
-  const hasObsPhotos = observations.some(o => o.photos && o.photos.length > 0);
+  const hasObsPhotos = observations.some(o => (o.photos||[]).length > 0);
   return hasObsPhotos || sitePhotos.length > 0;
 }
 
@@ -826,8 +837,10 @@ function safeGoHome(){
 }
 
 function goToWelcome(){
-  // Do NOT call collectFieldsFromForm() here — fields screen may not be active
-  // Fields are kept current via oninput → autosave() throughout the session
+  // Collect fields only if the fields screen is currently active
+  if(document.getElementById('screen-field').classList.contains('active')){
+    collectFieldsFromForm();
+  }
   saveDraft();
   renderWelcomeScreen();
   showScreen('screen-welcome');
