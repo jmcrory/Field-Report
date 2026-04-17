@@ -218,7 +218,7 @@
       <div class="info-item"><span class="info-num">9</span><span class="info-text">The Report # field expects a whole number (e.g. 1, 2, 3). If you need to use a different format, tap the Override button that appears. Voice-to-text number words such as "one" or "two" will be automatically converted to digits.</span></div>
       <div class="info-item"><span class="info-num">10</span><span class="info-text">When you tap Export, the ZIP file is downloaded to your device's Downloads folder or Files app. From there, you will need to transfer it to your office computer manually — via OneDrive, email (for smaller reports), USB cable, or another method of your choosing.</span></div>
       <div class="info-item"><span class="info-num">11</span><span class="info-text">The report generator requires a pre-configured Word template (.docx) with the correct placeholder fields. If the template is missing or outdated, the generated report may be incomplete or incorrectly formatted.</span></div>
-      <div class="info-item"><span class="info-num">12</span><span class="info-text">⚠︎ Photos taken directly through this app using the "Take Photo" option are NOT saved to your Camera Roll. They exist only within the app and will be permanently lost if the page is refreshed or the app is closed. Always take photos using your device's native Camera app first, then add them to the report by selecting them from your photo library.</span></div>
+      <div class="info-item"><span class="info-num">12</span><span class="info-text"><strong>DO NOT TAKE PHOTOS FROM WITHIN THIS APPLICATION.</strong> Use the camera app on your device to ensure the photos are stored. Any photos taken directly through this app are not saved to your Camera Roll and will be lost on refresh.</span></div>
     </div>
   </div>
 </div>
@@ -416,7 +416,7 @@
       <textarea class="modal-textarea" id="fu-tx" placeholder="Any required actions or follow-up…" rows="1" style="min-height:44px;"></textarea>
 
       <div class="modal-section-lbl">Photos</div>
-      <div style="font-size:11px;color:var(--muted);font-family:var(--mono);line-height:1.6;">⚠︎ Use your Camera app to take photos, then add them here. Photos taken directly through this app are not saved to your Camera Roll and will be lost on refresh.</div>
+      <div style="font-size:13px;color:var(--text);font-family:var(--mono);line-height:1.7;background:#fff3cd;border:1px solid #e6a817;border-radius:10px;padding:10px 14px;"><strong>DO NOT TAKE PHOTOS FROM WITHIN THIS APPLICATION.</strong> Use the camera app on your device to ensure the photos are stored. Any photos taken directly through this app are not saved to your Camera Roll and will be lost on refresh.</div>
       <input type="file" id="obs-photo-input" accept="image/*" multiple onchange="photoSelected(event)">
       <div class="photo-grid" id="obs-photo-grid">
         <button class="btn-add-photo" onclick="document.getElementById('obs-photo-input').click()">+</button>
@@ -441,7 +441,7 @@
     <div style="padding:24px 24px 8px;display:flex;flex-direction:column;gap:10px;">
       <p style="font-size:13px;color:var(--muted);font-family:var(--mono);line-height:1.6;">Add all photos from this visit. These will be exported to <span style="color:var(--accent);font-weight:700;">photos/site/</span> in the zip file — duplicates are fine.</p>
       <p style="font-size:11px;color:var(--muted);font-family:var(--mono);line-height:1.6;">⚠︎ Site photos are not saved to your draft. If you return Home or refresh, they will need to be re-added.</p>
-      <p style="font-size:11px;color:var(--muted);font-family:var(--mono);line-height:1.6;">⚠︎ Use your Camera app to take photos, then add them here. Photos taken directly through this app are not saved to your Camera Roll and will be lost on refresh.</p>
+      <p style="font-size:13px;color:var(--text);font-family:var(--mono);line-height:1.7;background:#fff3cd;border:1px solid #e6a817;border-radius:10px;padding:10px 14px;"><strong>DO NOT TAKE PHOTOS FROM WITHIN THIS APPLICATION.</strong> Use the camera app on your device to ensure the photos are stored. Any photos taken directly through this app are not saved to your Camera Roll and will be lost on refresh.</p>
       <input type="file" id="site-photo-input" accept="image/*" multiple onchange="sitePhotoSelected(event)" style="display:none;">
       <button class="btn-obs" id="site-photo-btn" onclick="document.getElementById('site-photo-input').click()">+ Add Site Photos</button>
       <div id="site-photo-progress" style="display:none;flex-direction:column;gap:8px;">
@@ -537,6 +537,7 @@ let curObsPhotos       = [];
 let sitePhotos         = [];   // [{filename, dataUrl}]
 let reportNumOverridden= false;
 let activeDraftId      = null; // unique ID of the currently loaded named draft (null = ephemeral only)
+let isPopulating       = false; // suppresses autosave during populateFormFromData
 
 // ── INIT ─────────────────────────────────────────────────────
 (function(){
@@ -584,11 +585,18 @@ function commitNamedDraft(){
   const drafts = getNamedDrafts();
   const count  = Object.keys(drafts).length;
 
-  // If this session already has a named draft slot, update it
-  // Otherwise create a new one (respecting soft cap)
+  // If we have an existing named slot, check if the display name has changed
+  // If it has changed, treat as a new draft rather than overwriting
+  if(activeDraftId && drafts[activeDraftId]){
+    const existingName = drafts[activeDraftId].displayName || '';
+    if(existingName !== displayName){
+      // Name changed — start a new slot
+      activeDraftId = null;
+    }
+  }
+
   if(!activeDraftId){
     if(count >= MAX_NAMED_DRAFTS){
-      // Soft cap — warn but still save
       console.warn('Approaching saved draft limit');
     }
     activeDraftId = String(Date.now());
@@ -608,6 +616,7 @@ function commitNamedDraft(){
   };
 
   saveNamedDrafts(drafts);
+  saveDraft(); // keep ephemeral slot in sync with updated activeDraftId
 }
 
 function deleteNamedDraft(id){
@@ -619,6 +628,7 @@ function deleteNamedDraft(id){
 
 // ── DRAFT PERSISTENCE ────────────────────────────────────────
 function autosave(){
+  if(isPopulating) return; // don't save mid-population
   collectFieldsFromForm();
   saveDraft();
 }
@@ -655,6 +665,13 @@ function checkDraft(){
     if(!raw) return;
     const draft = JSON.parse(raw);
     if(!draft || !draft.reportData) return;
+    // Only show banner if draft has meaningful content
+    const hasFields = FIELD_KEYS.some(k => (draft.reportData[k]||'').trim());
+    const hasObs    = draft.observations && draft.observations.length > 0;
+    if(!hasFields && !hasObs){
+      localStorage.removeItem(STORAGE_KEY); // clean up empty draft
+      return;
+    }
     document.getElementById('restore-wrap').style.display = 'block';
   } catch(e){}
 }
@@ -809,7 +826,8 @@ function safeGoHome(){
 }
 
 function goToWelcome(){
-  collectFieldsFromForm();
+  // Do NOT call collectFieldsFromForm() here — fields screen may not be active
+  // Fields are kept current via oninput → autosave() throughout the session
   saveDraft();
   renderWelcomeScreen();
   showScreen('screen-welcome');
@@ -844,13 +862,21 @@ function collectFieldsFromForm(){
 }
 
 function populateFormFromData(){
+  isPopulating = true; // suppress autosave during population
   FIELD_KEYS.forEach(k => {
     const el = document.getElementById('f-'+k);
-    if(el) el.value = reportData[k] || '';
+    if(el){
+      el.value = reportData[k] || '';
+      // Trigger resize for growing textareas
+      if(el.tagName === 'TEXTAREA'){
+        el.style.height = 'auto';
+        el.style.height = el.scrollHeight + 'px';
+      }
+    }
   });
-  // Update report # UI from stored value without re-processing the field
   reportNumOverridden = false;
   updateReportNumUI(reportData['report_number'] || '');
+  isPopulating = false;
 }
 
 function todayString(){
