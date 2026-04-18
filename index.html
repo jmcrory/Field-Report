@@ -824,23 +824,19 @@ function renderWelcomeScreen(){
   document.getElementById('restore-wrap').style.display = 'none';
   checkDraft();
   renderDraftsList();
-  renderInspector();
 }
 
 function toggleInspector(){
   const el = document.getElementById('state-inspector');
   if(!el) return;
-  if(el.style.display === 'none'){
-    renderInspector();
-    el.style.display = 'block';
-  } else {
-    el.style.display = 'none';
-  }
+  const opening = el.style.display === 'none';
+  el.style.display = opening ? 'block' : 'none';
+  if(opening) renderInspector(); // render after making visible
 }
 
 function renderInspector(){
   const el = document.getElementById('state-inspector');
-  if(!el || el.style.display === 'none') return;
+  if(!el) return; // element must exist but doesn't need to be visible to populate
 
   const lines = [];
 
