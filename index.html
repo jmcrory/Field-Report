@@ -178,6 +178,20 @@
   .clear-modal-btn-cancel{background:none;border:1px solid var(--border);border-radius:100px;padding:14px;font-size:14px;font-weight:600;font-family:var(--sans);cursor:pointer;touch-action:manipulation;color:var(--text);}
   .clear-modal-btn-cancel:active{background:var(--surface2);}
 
+  /* ── CUSTOM CONFIRM MODAL ── */
+  .confirm-modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:500;align-items:center;justify-content:center;padding:32px;}
+  .confirm-modal-ov.active{display:flex;}
+  .confirm-modal{background:var(--surface);border-radius:20px;padding:28px 24px;display:flex;flex-direction:column;gap:14px;max-width:320px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.25);}
+  .confirm-modal-title{font-size:17px;font-weight:800;color:var(--text);line-height:1.3;}
+  .confirm-modal-msg{font-size:14px;color:var(--text);line-height:1.6;font-family:var(--mono);}
+  .confirm-modal-ok{border:none;border-radius:100px;padding:14px;font-size:15px;font-weight:700;font-family:var(--sans);cursor:pointer;touch-action:manipulation;width:100%;}
+  .confirm-modal-ok:active{opacity:.85;}
+  .confirm-modal-cancel{background:none;border:1px solid var(--border);border-radius:100px;padding:14px;font-size:14px;font-weight:600;font-family:var(--sans);cursor:pointer;touch-action:manipulation;color:var(--text);width:100%;}
+  .confirm-modal-cancel:active{background:var(--surface2);}
+
+  /* ── GLOBAL ERROR BAR (diagnostic — remove when stable) ── */
+  #global-err-bar{display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#c0392b;color:#fff;font-size:11px;font-family:var(--mono);padding:8px 14px;line-height:1.5;word-break:break-all;}
+
   /* ── RESTORE BANNER ── */
   .restore-banner{background:var(--accent);color:#fff;padding:14px 20px;font-size:13px;font-family:var(--mono);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
   .restore-banner button{background:#fff;color:var(--accent);border:none;border-radius:100px;padding:8px 16px;font-size:12px;font-weight:700;font-family:var(--mono);cursor:pointer;white-space:nowrap;}
@@ -232,6 +246,19 @@
     <button class="clear-modal-btn-cancel" onclick="document.getElementById('clear-modal').classList.remove('active')">Cancel</button>
   </div>
 </div>
+
+<!-- ── CUSTOM CONFIRM MODAL ── -->
+<div class="confirm-modal-ov" id="confirm-modal">
+  <div class="confirm-modal">
+    <div class="confirm-modal-title" id="confirm-modal-title"></div>
+    <div class="confirm-modal-msg" id="confirm-modal-msg"></div>
+    <button class="confirm-modal-ok" id="confirm-modal-ok">Confirm</button>
+    <button class="confirm-modal-cancel" id="confirm-modal-cancel">Cancel</button>
+  </div>
+</div>
+
+<!-- ── GLOBAL ERROR BAR ── -->
+<div id="global-err-bar"></div>
 
 <!-- ── WELCOME ── -->
 <div class="screen active" id="screen-welcome">
@@ -539,7 +566,58 @@ let reportNumOverridden= false;
 let activeDraftId      = null; // unique ID of the currently loaded named draft (null = ephemeral only)
 let isPopulating       = false; // suppresses autosave during populateFormFromData
 
-// ── INIT ─────────────────────────────────────────────────────
+// ── GLOBAL ERROR CAPTURE (diagnostic) ───────────────────────
+window.onerror = function(msg, src, line, col, err){
+  const bar = document.getElementById('global-err-bar');
+  if(bar){
+    bar.textContent = '⚠ JS Error: ' + msg + ' (line ' + line + ')';
+    bar.style.display = 'block';
+  }
+  return false;
+};
+window.onunhandledrejection = function(e){
+  const bar = document.getElementById('global-err-bar');
+  if(bar){
+    bar.textContent = '⚠ Unhandled Promise: ' + (e.reason || 'unknown');
+    bar.style.display = 'block';
+  }
+};
+
+// ── CUSTOM CONFIRM ───────────────────────────────────────────
+// Replaces native confirm() which is suppressed in iOS PWA mode
+// Usage: appConfirm({title, msg, okLabel, okDanger, onOk, onCancel})
+function appConfirm({title='', msg='', okLabel='Confirm', okDanger=false, onOk=()=>{}, onCancel=()=>{}}={}){
+  const ov     = document.getElementById('confirm-modal');
+  const titleEl= document.getElementById('confirm-modal-title');
+  const msgEl  = document.getElementById('confirm-modal-msg');
+  const okBtn  = document.getElementById('confirm-modal-ok');
+  const cancelBtn = document.getElementById('confirm-modal-cancel');
+
+  titleEl.textContent = title;
+  msgEl.textContent   = msg;
+  okBtn.textContent   = okLabel;
+  okBtn.style.background    = okDanger ? 'var(--danger)' : 'var(--accent)';
+  okBtn.style.color         = '#fff';
+
+  // Clone buttons to remove any previous listeners
+  const newOk     = okBtn.cloneNode(true);
+  const newCancel = cancelBtn.cloneNode(true);
+  okBtn.parentNode.replaceChild(newOk, okBtn);
+  cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
+
+  newOk.addEventListener('click', ()=>{
+    ov.classList.remove('active');
+    onOk();
+  });
+  newCancel.addEventListener('click', ()=>{
+    ov.classList.remove('active');
+    onCancel();
+  });
+
+  ov.classList.add('active');
+}
+
+
 (function(){
   checkDraft();
   renderWelcomeScreen();
@@ -651,7 +729,13 @@ function saveDraft(){
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
   } catch(e){
-    console.warn('Autosave failed:', e);
+    // Surface storage failures visibly rather than silently swallowing them
+    const bar = document.getElementById('global-err-bar');
+    if(bar){
+      bar.textContent = '⚠ Draft save failed: ' + e.message + ' — your data is safe in memory but may not survive a refresh.';
+      bar.style.display = 'block';
+    }
+    console.warn('saveDraft failed:', e);
   }
 }
 
@@ -699,16 +783,29 @@ function loadNamedDraft(id){
   const drafts = getNamedDrafts();
   const draft  = drafts[id];
   if(!draft) return;
-  // Warn if active ephemeral data would be lost
   const draftExists = !!localStorage.getItem(STORAGE_KEY);
   if(draftExists){
-    if(!confirm('Load this saved draft? Your current draft in progress will be replaced. Any site photos will be lost.')) return;
+    appConfirm({
+      title:    'Load Saved Draft?',
+      msg:      'Your current draft in progress will be replaced. Any site photos will be lost.',
+      okLabel:  'Load Draft',
+      okDanger: false,
+      onOk: ()=>_doLoadNamedDraft(id)
+    });
+    return;
   }
+  _doLoadNamedDraft(id);
+}
+
+function _doLoadNamedDraft(id){
+  const drafts = getNamedDrafts();
+  const draft  = drafts[id];
+  if(!draft) return;
   reportData    = draft.reportData   || {};
   observations  = draft.observations || [];
   activeDraftId = id;
   sitePhotos    = [];
-  saveDraft(); // write to ephemeral slot so it survives a refresh
+  saveDraft();
   populateFormFromData();
   renderObs();
   renderSitePhotos();
@@ -743,7 +840,7 @@ function renderDraftsList(){
   list.innerHTML = keys.map(id=>{
     const d    = drafts[id];
     const date = d.updatedAt ? new Date(d.updatedAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}) : '';
-    return `<div class="draft-row" onclick="loadNamedDraft('${id}')">
+    return `<div class="draft-row" data-load-id="${id}">
       <div class="draft-row-info">
         <div class="draft-row-name">${escHtml(d.displayName)}</div>
         <div class="draft-row-time">${date}</div>
@@ -752,13 +849,15 @@ function renderDraftsList(){
     </div>`;
   }).join('');
 
-  // Use event delegation for delete buttons — avoids iOS confirm suppression from stopPropagation
+  // Single delegation listener — routes to delete or load based on target
   list.onclick = function(e){
     const delBtn = e.target.closest('[data-draft-id]');
     if(delBtn){
-      e.stopPropagation();
       confirmDeleteNamedDraft(delBtn.dataset.draftId);
+      return;
     }
+    const row = e.target.closest('[data-load-id]');
+    if(row) loadNamedDraft(row.dataset.loadId);
   };
 
   // Show soft cap warning if approaching limit
@@ -779,9 +878,16 @@ function toggleDraftsList(){
 function confirmDeleteNamedDraft(id){
   const drafts = getNamedDrafts();
   const name   = drafts[id]?.displayName || 'this draft';
-  if(!confirm(`Delete "${name}"? This cannot be undone.`)) return;
-  deleteNamedDraft(id);
-  renderDraftsList();
+  appConfirm({
+    title:    'Delete Draft?',
+    msg:      `"${name}" will be permanently deleted. This cannot be undone.`,
+    okLabel:  'Delete',
+    okDanger: true,
+    onOk: ()=>{
+      deleteNamedDraft(id);
+      renderDraftsList();
+    }
+  });
 }
 
 function openClearAllModal(){
@@ -794,18 +900,37 @@ function openClearAllModal(){
 
 function clearAllDraftsConfirmed(){
   document.getElementById('clear-modal').classList.remove('active');
-  if(!confirm(`Are you absolutely sure? All saved drafts will be permanently deleted.`)) return;
-  localStorage.removeItem(NAMED_DRAFTS_KEY);
-  activeDraftId = null;
-  renderDraftsList();
+  const count = Object.keys(getNamedDrafts()).length;
+  appConfirm({
+    title:    'Are You Absolutely Sure?',
+    msg:      `All ${count} saved draft${count!==1?'s':''} will be permanently deleted. This cannot be undone.`,
+    okLabel:  'Delete All',
+    okDanger: true,
+    onOk: ()=>{
+      localStorage.removeItem(NAMED_DRAFTS_KEY);
+      activeDraftId = null;
+      renderDraftsList();
+    }
+  });
 }
 
 // ── WELCOME ──────────────────────────────────────────────────
 function startReport(){
   const draftExists = !!localStorage.getItem(STORAGE_KEY);
   if(draftExists){
-    if(!confirm('Start a new report? Your current draft in progress will be cleared. Any site photos will also be lost.')) return;
+    appConfirm({
+      title:    'Start New Report?',
+      msg:      'Your current draft in progress will be cleared. Any site photos will also be lost.',
+      okLabel:  'Start New',
+      okDanger: true,
+      onOk: ()=>_doStartReport()
+    });
+    return;
   }
+  _doStartReport();
+}
+
+function _doStartReport(){
   reportData    = {};
   observations  = [];
   sitePhotos    = [];
@@ -831,7 +956,14 @@ function hasAnyPhotos(){
 
 function safeGoHome(){
   if(hasAnyPhotos()){
-    if(!confirm('Return to Home? Your field data and observation notes will be saved, but all photos will be removed from your draft and will need to be re-added.')) return;
+    appConfirm({
+      title: 'Return to Home?',
+      msg:   'Your field data and observation notes will be saved, but all photos will be removed from your draft and will need to be re-added.',
+      okLabel: 'Go Home',
+      okDanger: false,
+      onOk: ()=>goToWelcome()
+    });
+    return;
   }
   goToWelcome();
 }
@@ -1041,10 +1173,17 @@ function saveObs(){
 }
 
 function delObs(i){
-  if(!confirm('Remove this observation?')) return;
-  observations.splice(i,1);
-  renderObs();
-  saveDraft();
+  appConfirm({
+    title:    'Remove Observation?',
+    msg:      'This observation will be permanently removed.',
+    okLabel:  'Remove',
+    okDanger: true,
+    onOk: ()=>{
+      observations.splice(i,1);
+      renderObs();
+      saveDraft();
+    }
+  });
 }
 
 function renderObs(){
@@ -1303,10 +1442,17 @@ function revObsChange(textarea){
 }
 
 function delObsFromReview(i){
-  if(!confirm('Remove this observation?')) return;
-  observations.splice(i,1);
-  buildReview();
-  saveDraft();
+  appConfirm({
+    title:    'Remove Observation?',
+    msg:      'This observation will be permanently removed.',
+    okLabel:  'Remove',
+    okDanger: true,
+    onOk: ()=>{
+      observations.splice(i,1);
+      buildReview();
+      saveDraft();
+    }
+  });
 }
 
 function addObsFromReview(){
@@ -1431,17 +1577,24 @@ async function exportReport(){
 
 // ── RESTART ──────────────────────────────────────────────────
 function confirmRestart(){
-  if(!confirm('Start a new report? All current data will be cleared. Any site photos will also be lost.')) return;
-  reportData    = {};
-  observations  = [];
-  sitePhotos    = [];
-  activeDraftId = null;
-  clearDraft();
-  populateFormFromData();
-  renderObs();
-  renderSitePhotos();
-  showScreen('screen-welcome');
-  renderWelcomeScreen();
+  appConfirm({
+    title:    'Start New Report?',
+    msg:      'All current data will be cleared. Any site photos will also be lost.',
+    okLabel:  'Start New',
+    okDanger: true,
+    onOk: ()=>{
+      reportData    = {};
+      observations  = [];
+      sitePhotos    = [];
+      activeDraftId = null;
+      clearDraft();
+      populateFormFromData();
+      renderObs();
+      renderSitePhotos();
+      showScreen('screen-welcome');
+      renderWelcomeScreen();
+    }
+  });
 }
 
 // ── UTILS ────────────────────────────────────────────────────
