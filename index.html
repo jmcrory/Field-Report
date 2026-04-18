@@ -964,7 +964,7 @@ function confirmDeleteNamedDraft(id){
     okDanger: true,
     onOk: ()=>{
       deleteNamedDraft(id);
-      renderDraftsList();
+      setTimeout(()=>{ renderDraftsList(); renderInspector(); }, 0);
     }
   });
 }
@@ -988,7 +988,7 @@ function clearAllDraftsConfirmed(){
     onOk: ()=>{
       localStorage.removeItem(NAMED_DRAFTS_KEY);
       activeDraftId = null;
-      renderDraftsList();
+      setTimeout(()=>{ renderDraftsList(); renderInspector(); }, 0);
     }
   });
 }
