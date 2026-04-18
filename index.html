@@ -299,6 +299,12 @@
       <button class="info-btn" onclick="document.getElementById('info-modal').classList.add('active')">Assumptions &amp; Limitations</button>
       <div class="status" id="start-status"></div>
     </div>
+
+    <!-- ── STATE INSPECTOR (diagnostic — remove when stable) ── -->
+    <div style="width:100%;max-width:340px;margin-top:8px;">
+      <button onclick="toggleInspector()" style="background:none;border:1px solid #aaa;border-radius:100px;padding:6px 16px;font-size:11px;font-family:var(--mono);color:#666;cursor:pointer;width:100%;">🔍 Debug Inspector</button>
+      <div id="state-inspector" style="display:none;margin-top:8px;background:#1a1a1a;border-radius:10px;padding:14px;font-size:11px;font-family:var(--mono);color:#7fff7f;line-height:1.8;text-align:left;white-space:pre-wrap;word-break:break-all;max-height:320px;overflow-y:auto;"></div>
+    </div>
   </div>
 </div>
 
@@ -818,6 +824,78 @@ function renderWelcomeScreen(){
   document.getElementById('restore-wrap').style.display = 'none';
   checkDraft();
   renderDraftsList();
+  renderInspector();
+}
+
+function toggleInspector(){
+  const el = document.getElementById('state-inspector');
+  if(!el) return;
+  if(el.style.display === 'none'){
+    renderInspector();
+    el.style.display = 'block';
+  } else {
+    el.style.display = 'none';
+  }
+}
+
+function renderInspector(){
+  const el = document.getElementById('state-inspector');
+  if(!el || el.style.display === 'none') return;
+
+  const lines = [];
+
+  // ── In-memory state
+  lines.push('── IN-MEMORY STATE ──────────────');
+  lines.push('activeDraftId : ' + (activeDraftId || '(null)'));
+  lines.push('reportData keys: ' + FIELD_KEYS.filter(k=>(reportData[k]||'').trim()).join(', ') || '(none)');
+  lines.push('observations  : ' + observations.length + ' item(s)');
+  lines.push('sitePhotos    : ' + sitePhotos.length + ' item(s)');
+  lines.push('isPopulating  : ' + isPopulating);
+
+  // ── Ephemeral draft in localStorage
+  lines.push('');
+  lines.push('── EPHEMERAL DRAFT ──────────────');
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw){
+      lines.push('(none)');
+    } else {
+      const d = JSON.parse(raw);
+      lines.push('savedAt       : ' + (d.savedAt||'?'));
+      lines.push('activeDraftId : ' + (d.activeDraftId||'(null)'));
+      lines.push('fields        : ' + FIELD_KEYS.filter(k=>(d.reportData?.[k]||'').trim()).join(', '));
+      lines.push('observations  : ' + (d.observations?.length||0) + ' item(s)');
+    }
+  } catch(e){ lines.push('ERROR: ' + e.message); }
+
+  // ── Named drafts collection
+  lines.push('');
+  lines.push('── NAMED DRAFTS ─────────────────');
+  try {
+    const drafts = getNamedDrafts();
+    const keys   = Object.keys(drafts);
+    lines.push('Total entries : ' + keys.length);
+    keys.sort((a,b)=>(drafts[b].updatedAt||'').localeCompare(drafts[a].updatedAt||'')).forEach((id,i)=>{
+      const d = drafts[id];
+      lines.push('');
+      lines.push('[' + (i+1) + '] id       : ' + id);
+      lines.push('    name     : ' + (d.displayName||'(none)'));
+      lines.push('    updated  : ' + (d.updatedAt||'?'));
+      lines.push('    obs      : ' + (d.observations?.length||0));
+      lines.push('    fields   : ' + FIELD_KEYS.filter(k=>(d.reportData?.[k]||'').trim()).join(', '));
+    });
+  } catch(e){ lines.push('ERROR: ' + e.message); }
+
+  // ── Raw localStorage keys
+  lines.push('');
+  lines.push('── ALL localStorage KEYS ────────');
+  for(let i=0; i<localStorage.length; i++){
+    const k = localStorage.key(i);
+    const len = (localStorage.getItem(k)||'').length;
+    lines.push(k + ' (' + (len/1024).toFixed(1) + ' KB)');
+  }
+
+  el.textContent = lines.join('\n');
 }
 
 function renderDraftsList(){
