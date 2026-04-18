@@ -864,8 +864,9 @@ function renderDraftsList(){
   };
 
   // Show soft cap warning if approaching limit
+  // Use insertAdjacentHTML to avoid destroying the onclick delegation listener
   if(keys.length >= MAX_NAMED_DRAFTS - 5){
-    list.innerHTML += `<div style="padding:10px 16px;font-size:11px;font-family:var(--mono);color:var(--warning);border-top:1px solid var(--border);">⚠︎ ${keys.length}/${MAX_NAMED_DRAFTS} saved drafts — consider clearing old ones.</div>`;
+    list.insertAdjacentHTML('beforeend', `<div style="padding:10px 16px;font-size:11px;font-family:var(--mono);color:var(--warning);border-top:1px solid var(--border);">⚠︎ ${keys.length}/${MAX_NAMED_DRAFTS} saved drafts — consider clearing old ones.</div>`);
   }
 }
 
