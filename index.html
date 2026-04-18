@@ -651,7 +651,14 @@ function getNamedDrafts(){
 function saveNamedDrafts(drafts){
   try {
     localStorage.setItem(NAMED_DRAFTS_KEY, JSON.stringify(drafts));
-  } catch(e){ console.warn('Named draft save failed:', e); }
+  } catch(e){
+    const bar = document.getElementById('global-err-bar');
+    if(bar){
+      bar.textContent = '⚠ Named draft save failed: ' + e.message;
+      bar.style.display = 'block';
+    }
+    console.warn('Named draft save failed:', e);
+  }
 }
 
 function draftDisplayName(){
@@ -911,6 +918,8 @@ function renderDraftsList(){
     return;
   }
 
+  // Show button and update count — preserve current open/closed state of wrap
+  const wasOpen = wrap.style.display !== 'none';
   toggleBtn.style.display = 'block';
   countEl.textContent     = keys.length;
 
@@ -919,7 +928,7 @@ function renderDraftsList(){
     const date = d.updatedAt ? new Date(d.updatedAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}) : '';
     return `<div class="draft-row" data-load-id="${id}">
       <div class="draft-row-info">
-        <div class="draft-row-name">${escHtml(d.displayName)}</div>
+        <div class="draft-row-name">${escHtml(d.displayName||'(unnamed)')}</div>
         <div class="draft-row-time">${date}</div>
       </div>
       <button class="draft-row-del" data-draft-id="${id}" title="Delete">×</button>
@@ -949,9 +958,9 @@ function toggleDraftsList(){
   const btn      = document.getElementById('drafts-toggle-btn');
   const countEl  = document.getElementById('drafts-count');
   if(!wrap || !btn || !countEl) return;
-  const open = wrap.style.display === 'none';
-  wrap.style.display = open ? 'block' : 'none';
-  btn.textContent = (open ? '📂' : '📁') + ` Saved Drafts (${countEl.textContent})`;
+  const opening = wrap.style.display === 'none';
+  wrap.style.display = opening ? 'block' : 'none';
+  btn.innerHTML = (opening ? '📂' : '📁') + ` Saved Drafts (<span id="drafts-count">${countEl.textContent}</span>)`;
 }
 
 function confirmDeleteNamedDraft(id){
