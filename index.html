@@ -422,7 +422,7 @@
   </div>
   <div class="obs-footer">
     <div class="btn-row">
-      <button class="btn-sec" onclick="showScreen('screen-field')">← Back</button>
+      <button class="btn-sec" onclick="goBackToFields()">← Back</button>
       <button class="btn-nxt" onclick="showScreen('screen-site-photos')">Site Photos →</button>
     </div>
   </div>
@@ -828,6 +828,9 @@ function renderDraftsList(){
   const countEl   = document.getElementById('drafts-count');
   const list      = document.getElementById('drafts-list');
 
+  // Guard — elements only exist on the welcome screen
+  if(!toggleBtn || !wrap || !countEl || !list) return;
+
   if(!keys.length){
     toggleBtn.style.display = 'none';
     wrap.style.display      = 'none';
@@ -867,12 +870,13 @@ function renderDraftsList(){
 }
 
 function toggleDraftsList(){
-  const wrap = document.getElementById('drafts-wrap');
-  const btn  = document.getElementById('drafts-toggle-btn');
+  const wrap     = document.getElementById('drafts-wrap');
+  const btn      = document.getElementById('drafts-toggle-btn');
+  const countEl  = document.getElementById('drafts-count');
+  if(!wrap || !btn || !countEl) return;
   const open = wrap.style.display === 'none';
   wrap.style.display = open ? 'block' : 'none';
-  btn.textContent    = `📁 Saved Drafts (${document.getElementById('drafts-count').textContent})`;
-  if(open) btn.textContent = `📂 Saved Drafts (${document.getElementById('drafts-count').textContent})`;
+  btn.textContent = (open ? '📂' : '📁') + ` Saved Drafts (${countEl.textContent})`;
 }
 
 function confirmDeleteNamedDraft(id){
@@ -974,8 +978,8 @@ function goToWelcome(){
     collectFieldsFromForm();
   }
   saveDraft();
-  renderWelcomeScreen();
-  showScreen('screen-welcome');
+  showScreen('screen-welcome');   // show first so DOM elements are accessible
+  renderWelcomeScreen();          // then render into the now-visible screen
 }
 
 function goToObs(){
@@ -984,6 +988,12 @@ function goToObs(){
   commitNamedDraft(); // lock into long-term storage if project name + number present
   renderObs();
   showScreen('screen-obs');
+}
+
+function goBackToFields(){
+  // Repopulate field DOM from reportData since fields were populated before going forward
+  populateFormFromData();
+  showScreen('screen-field');
 }
 
 function goToReview(){
