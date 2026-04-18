@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Field Report">
-<!-- v10 -->
+<!-- v11 -->
 <title>Field Report</title>
 <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
 <style>
@@ -106,7 +106,7 @@
   .site-photo-wrap{position:relative;width:calc(33.33% - 8px);}
   .site-photo-wrap img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;border:1px solid var(--border);display:block;}
   .site-photo-del{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:var(--danger);color:#fff;border:none;font-size:13px;line-height:22px;text-align:center;cursor:pointer;padding:0;touch-action:manipulation;}
-  .site-photo-count{font-size:12px;font-family:var(--mono);color:var(--muted);padding:0 24px 8px;}
+  .site-photo-count{font-size:12px;font-family:var(--mono);color:var(--text);padding:0 24px 8px;}
 
   /* ── MODAL ── */
   .modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;align-items:flex-end;}
@@ -189,7 +189,7 @@
   .confirm-modal-cancel{background:none;border:1px solid var(--border);border-radius:100px;padding:14px;font-size:14px;font-weight:600;font-family:var(--sans);cursor:pointer;touch-action:manipulation;color:var(--text);width:100%;}
   .confirm-modal-cancel:active{background:var(--surface2);}
 
-  /* ── GLOBAL ERROR BAR (diagnostic — remove when stable) ── */
+  /* ── GLOBAL ERROR BAR (diagnostic) ── */
   #global-err-bar{display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#c0392b;color:#fff;font-size:11px;font-family:var(--mono);padding:8px 14px;line-height:1.5;word-break:break-all;}
 
   /* ── RESTORE BANNER ── */
@@ -197,7 +197,7 @@
   .restore-banner button{background:#fff;color:var(--accent);border:none;border-radius:100px;padding:8px 16px;font-size:12px;font-weight:700;font-family:var(--mono);cursor:pointer;white-space:nowrap;}
 
   /* ── ASSUMPTIONS MODAL ── */
-  .info-btn{background:none;border:1px solid var(--border);border-radius:100px;padding:8px 20px;font-size:12px;font-family:var(--mono);color:var(--muted);cursor:pointer;touch-action:manipulation;}
+  .info-btn{background:none;border:1px solid var(--border);border-radius:100px;padding:8px 20px;font-size:12px;font-family:var(--mono);color:var(--text);cursor:pointer;touch-action:manipulation;}
   .info-btn:active{background:var(--surface2);color:var(--accent);border-color:var(--accent);}
   .info-modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;align-items:flex-end;}
   .info-modal-ov.active{display:flex;}
@@ -230,7 +230,7 @@
       <div class="info-item"><span class="info-num">7</span><span class="info-text">Signature placement relative to report content can vary depending on signature used. Always review signature locations after generating the report template and adjust manually as needed before finalizing.</span></div>
       <div class="info-item"><span class="info-num">8</span><span class="info-text">Your field data and observation notes are automatically saved as a draft and will survive an accidental page refresh. However, photos (both observation photos and site photos) are not saved to the draft due to device storage limitations. If the page is refreshed or you return to the Home screen, photos will need to be re-added.</span></div>
       <div class="info-item"><span class="info-num">9</span><span class="info-text">The Report # field expects a whole number (e.g. 1, 2, 3). If you need to use a different format, tap the Override button that appears. Voice-to-text number words such as "one" or "two" will be automatically converted to digits.</span></div>
-      <div class="info-item"><span class="info-num">10</span><span class="info-text">When you tap Export, the ZIP file is downloaded to your device's Downloads folder or Files app. From there, you will need to transfer it to your office computer manually — via OneDrive, email (for smaller reports), USB cable, or another method of your choosing.</span></div>
+      <div class="info-item"><span class="info-num">10</span><span class="info-text">When you tap Export, the ZIP file is downloaded to your device's Downloads folder or Files app. Save to OneDrive to access on your computer.</span></div>
       <div class="info-item"><span class="info-num">11</span><span class="info-text">The report generator requires a pre-configured Word template (.docx) with the correct placeholder fields. If the template is missing or outdated, the generated report may be incomplete or incorrectly formatted.</span></div>
       <div class="info-item"><span class="info-num">12</span><span class="info-text"><strong>DO NOT TAKE PHOTOS FROM WITHIN THIS APPLICATION.</strong> Use the camera app on your device to ensure the photos are stored. Any photos taken directly through this app are not saved to your Camera Roll and will be lost on refresh.</span></div>
     </div>
@@ -276,7 +276,7 @@
       <div style="font-size:10px;font-family:var(--mono);color:var(--accent);letter-spacing:.15em;text-transform:uppercase;margin-bottom:8px;">Field Report Tool</div>
       <h1 style="font-size:32px;font-weight:800;letter-spacing:-.03em;line-height:1.1;color:var(--text);">Capture your<br>site report.</h1>
     </div>
-    <p style="font-size:14px;color:var(--muted);line-height:1.7;font-family:var(--mono);max-width:280px;">Fill in all fields, add observations and photos, then export a ZIP for the office.</p>
+    <p style="font-size:14px;color:var(--text);line-height:1.7;font-family:var(--mono);max-width:280px;">Fill in all fields, add observations and photos, then export a ZIP for the office.</p>
 
     <!-- Ephemeral active draft banner -->
     <div id="restore-wrap" style="width:100%;max-width:340px;display:none;">
@@ -291,7 +291,7 @@
 
       <!-- Saved drafts expandable section -->
       <button class="drafts-btn" id="drafts-toggle-btn" onclick="toggleDraftsList()" style="display:none;">📁 Saved Drafts (<span id="drafts-count">0</span>)</button>
-      <div id="drafts-wrap" style="display:none;width:100%;">
+      <div id="drafts-wrap" style="display:none;width:100%;max-height:320px;overflow-y:auto;-webkit-overflow-scrolling:touch;">
         <div class="drafts-list" id="drafts-list"></div>
         <button class="drafts-clear-all" onclick="openClearAllModal()">Clear all saved drafts</button>
       </div>
@@ -421,8 +421,8 @@
     <h1>Observations</h1>
   </div>
   <div style="flex:1;padding:24px;display:flex;flex-direction:column;gap:20px;overflow-y:auto;">
-    <div style="font-size:13px;color:var(--muted);font-family:var(--mono);">Add each item observed. Each will be numbered in the final report.</div>
-    <div style="font-size:11px;color:var(--muted);font-family:var(--mono);line-height:1.6;">⚠︎ Observation photos are not saved to your draft. If you return Home or refresh, photos will need to be re-added. Notes and text are always saved.</div>
+    <div style="font-size:13px;color:var(--text);font-family:var(--mono);">Add each item observed. Each will be numbered in the final report.</div>
+    <div style="font-size:11px;color:var(--text);font-family:var(--mono);line-height:1.6;">⚠︎ Observation photos are not saved to your draft. If you return Home or refresh, photos will need to be re-added. Notes and text are always saved.</div>
     <div class="obs-list" id="obs-list"><div class="obs-empty">No observations yet.<br>Tap below to add one.</div></div>
     <button class="obs-add" onclick="openObsModal()">+ Add Observation</button>
   </div>
@@ -472,8 +472,8 @@
   </div>
   <div style="flex:1;overflow-y:auto;display:flex;flex-direction:column;">
     <div style="padding:24px 24px 8px;display:flex;flex-direction:column;gap:10px;">
-      <p style="font-size:13px;color:var(--muted);font-family:var(--mono);line-height:1.6;">Add all photos from this visit. These will be exported to <span style="color:var(--accent);font-weight:700;">photos/site/</span> in the zip file — duplicates are fine.</p>
-      <p style="font-size:11px;color:var(--muted);font-family:var(--mono);line-height:1.6;">⚠︎ Site photos are not saved to your draft. If you return Home or refresh, they will need to be re-added.</p>
+      <p style="font-size:13px;color:var(--text);font-family:var(--mono);line-height:1.6;">Add all photos from this visit. These will be exported to <span style="color:var(--accent);font-weight:700;">photos/site/</span> in the zip file — duplicates are fine.</p>
+      <p style="font-size:11px;color:var(--text);font-family:var(--mono);line-height:1.6;">⚠︎ Site photos are not saved to your draft. If you return Home or refresh, they will need to be re-added.</p>
       <p style="font-size:13px;color:var(--text);font-family:var(--mono);line-height:1.6;">⚠︎ DO NOT TAKE PHOTOS FROM WITHIN THIS APP.</p>
       <input type="file" id="site-photo-input" accept="image/*" multiple onchange="sitePhotoSelected(event)" style="display:none;">
       <button class="btn-obs" id="site-photo-btn" onclick="document.getElementById('site-photo-input').click()">+ Add Site Photos</button>
@@ -526,7 +526,7 @@
   <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 32px;gap:20px;text-align:center;">
     <div style="width:72px;height:72px;border-radius:50%;background:var(--accent-dim);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:32px;animation:pop .4s cubic-bezier(.34,1.56,.64,1);color:var(--accent);">✓</div>
     <h2 style="font-size:24px;font-weight:800;color:var(--text);">Report Exported</h2>
-    <p style="font-size:13px;font-family:var(--mono);color:var(--muted);line-height:1.7;max-width:280px;" id="exp-detail">Your zip file is ready.</p>
+    <p style="font-size:13px;font-family:var(--mono);color:var(--text);line-height:1.7;max-width:280px;" id="exp-detail">Your zip file is ready.</p>
   </div>
   <div style="padding:20px 24px 36px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:12px;align-items:center;">
     <button class="btn-exp" onclick="goToReview()">← Back to Report</button>
@@ -535,7 +535,6 @@
 </div>
 
 <script>
-/* JSZip 3.10.1 — bundled for offline use */
 /*!
 
 JSZip v3.10.1 - A JavaScript class for generating and reading zip files
@@ -552,8 +551,8 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 </script>
 <script>
 // ── CONSTANTS ────────────────────────────────────────────────
-const STORAGE_KEY        = 'fr_draft_v10';       // ephemeral active draft
-const NAMED_DRAFTS_KEY   = 'fr_named_drafts_v10'; // collection of named drafts
+const STORAGE_KEY        = 'fr_draft_v10';
+const NAMED_DRAFTS_KEY   = 'fr_named_drafts_v10';
 const MAX_NAMED_DRAFTS   = 50;
 
 const FIELD_KEYS = [
@@ -565,12 +564,12 @@ const FIELD_KEYS = [
 
 // ── STATE ────────────────────────────────────────────────────
 let reportData         = {};
-let observations       = [];   // [{description, followup, photos:[{filename,dataUrl}]}]
+let observations       = [];
 let curObsPhotos       = [];
-let sitePhotos         = [];   // [{filename, dataUrl}]
+let sitePhotos         = [];
 let reportNumOverridden= false;
-let activeDraftId      = null; // unique ID of the currently loaded named draft (null = ephemeral only)
-let isPopulating       = false; // suppresses autosave during populateFormFromData
+let activeDraftId      = null;
+let isPopulating       = false;
 
 // ── GLOBAL ERROR CAPTURE (diagnostic) ───────────────────────
 window.onerror = function(msg, src, line, col, err){
@@ -590,8 +589,6 @@ window.onunhandledrejection = function(e){
 };
 
 // ── CUSTOM CONFIRM ───────────────────────────────────────────
-// Replaces native confirm() which is suppressed in iOS PWA mode
-// Usage: appConfirm({title, msg, okLabel, okDanger, onOk, onCancel})
 function appConfirm({title='', msg='', okLabel='Confirm', okDanger=false, onOk=()=>{}, onCancel=()=>{}}={}){
   const ov     = document.getElementById('confirm-modal');
   const titleEl= document.getElementById('confirm-modal-title');
@@ -605,7 +602,6 @@ function appConfirm({title='', msg='', okLabel='Confirm', okDanger=false, onOk=(
   okBtn.style.background    = okDanger ? 'var(--danger)' : 'var(--accent)';
   okBtn.style.color         = '#fff';
 
-  // Clone buttons to remove any previous listeners
   const newOk     = okBtn.cloneNode(true);
   const newCancel = cancelBtn.cloneNode(true);
   okBtn.parentNode.replaceChild(newOk, okBtn);
@@ -671,17 +667,14 @@ function draftDisplayName(){
 
 function commitNamedDraft(){
   const displayName = draftDisplayName();
-  if(!displayName) return; // no name/number — stay ephemeral only
+  if(!displayName) return;
 
   const drafts = getNamedDrafts();
   const count  = Object.keys(drafts).length;
 
-  // If we have an existing named slot, check if the display name has changed
-  // If it has changed, treat as a new draft rather than overwriting
   if(activeDraftId && drafts[activeDraftId]){
     const existingName = drafts[activeDraftId].displayName || '';
     if(existingName !== displayName){
-      // Name changed — start a new slot
       activeDraftId = null;
     }
   }
@@ -707,7 +700,7 @@ function commitNamedDraft(){
   };
 
   saveNamedDrafts(drafts);
-  saveDraft(); // keep ephemeral slot in sync with updated activeDraftId
+  saveDraft();
 }
 
 function deleteNamedDraft(id){
@@ -719,7 +712,7 @@ function deleteNamedDraft(id){
 
 // ── DRAFT PERSISTENCE ────────────────────────────────────────
 function autosave(){
-  if(isPopulating) return; // don't save mid-population
+  if(isPopulating) return;
   collectFieldsFromForm();
   saveDraft();
 }
@@ -742,7 +735,6 @@ function saveDraft(){
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
   } catch(e){
-    // Surface storage failures visibly rather than silently swallowing them
     const bar = document.getElementById('global-err-bar');
     if(bar){
       bar.textContent = '⚠ Draft save failed: ' + e.message + ' — your data is safe in memory but may not survive a refresh.';
@@ -762,11 +754,10 @@ function checkDraft(){
     if(!raw) return;
     const draft = JSON.parse(raw);
     if(!draft || !draft.reportData) return;
-    // Only show banner if draft has meaningful content
     const hasFields = FIELD_KEYS.some(k => (draft.reportData[k]||'').trim());
     const hasObs    = draft.observations && draft.observations.length > 0;
     if(!hasFields && !hasObs){
-      localStorage.removeItem(STORAGE_KEY); // clean up empty draft
+      localStorage.removeItem(STORAGE_KEY);
       return;
     }
     document.getElementById('restore-wrap').style.display = 'block';
@@ -827,7 +818,6 @@ function _doLoadNamedDraft(id){
 
 // ── WELCOME SCREEN RENDERING ─────────────────────────────────
 function renderWelcomeScreen(){
-  // Reset banner before re-checking so stale state doesn't persist
   document.getElementById('restore-wrap').style.display = 'none';
   checkDraft();
   renderDraftsList();
@@ -838,16 +828,15 @@ function toggleInspector(){
   if(!el) return;
   const opening = el.style.display === 'none';
   el.style.display = opening ? 'block' : 'none';
-  if(opening) renderInspector(); // render after making visible
+  if(opening) renderInspector();
 }
 
 function renderInspector(){
   const el = document.getElementById('state-inspector');
-  if(!el) return; // element must exist but doesn't need to be visible to populate
+  if(!el) return;
 
   const lines = [];
 
-  // ── In-memory state
   lines.push('── IN-MEMORY STATE ──────────────');
   lines.push('activeDraftId : ' + (activeDraftId || '(null)'));
   lines.push('reportData keys: ' + FIELD_KEYS.filter(k=>(reportData[k]||'').trim()).join(', ') || '(none)');
@@ -855,7 +844,6 @@ function renderInspector(){
   lines.push('sitePhotos    : ' + sitePhotos.length + ' item(s)');
   lines.push('isPopulating  : ' + isPopulating);
 
-  // ── Ephemeral draft in localStorage
   lines.push('');
   lines.push('── EPHEMERAL DRAFT ──────────────');
   try {
@@ -871,7 +859,6 @@ function renderInspector(){
     }
   } catch(e){ lines.push('ERROR: ' + e.message); }
 
-  // ── Named drafts collection
   lines.push('');
   lines.push('── NAMED DRAFTS ─────────────────');
   try {
@@ -889,7 +876,6 @@ function renderInspector(){
     });
   } catch(e){ lines.push('ERROR: ' + e.message); }
 
-  // ── Raw localStorage keys
   lines.push('');
   lines.push('── ALL localStorage KEYS ────────');
   for(let i=0; i<localStorage.length; i++){
@@ -909,7 +895,6 @@ function renderDraftsList(){
   const countEl   = document.getElementById('drafts-count');
   const list      = document.getElementById('drafts-list');
 
-  // Guard — elements only exist on the welcome screen
   if(!toggleBtn || !wrap || !countEl || !list) return;
 
   if(!keys.length){
@@ -918,7 +903,6 @@ function renderDraftsList(){
     return;
   }
 
-  // Show button and update count — preserve current open/closed state of wrap
   const wasOpen = wrap.style.display !== 'none';
   toggleBtn.style.display = 'block';
   countEl.textContent     = keys.length;
@@ -935,7 +919,6 @@ function renderDraftsList(){
     </div>`;
   }).join('');
 
-  // Single delegation listener — routes to delete or load based on target
   list.onclick = function(e){
     const delBtn = e.target.closest('[data-draft-id]');
     if(delBtn){
@@ -946,11 +929,13 @@ function renderDraftsList(){
     if(row) loadNamedDraft(row.dataset.loadId);
   };
 
-  // Show soft cap warning if approaching limit
-  // Use insertAdjacentHTML to avoid destroying the onclick delegation listener
   if(keys.length >= MAX_NAMED_DRAFTS - 5){
     list.insertAdjacentHTML('beforeend', `<div style="padding:10px 16px;font-size:11px;font-family:var(--mono);color:var(--warning);border-top:1px solid var(--border);">⚠︎ ${keys.length}/${MAX_NAMED_DRAFTS} saved drafts — consider clearing old ones.</div>`);
   }
+
+  // Keep debug inspector in sync if it is currently visible
+  const inspector = document.getElementById('state-inspector');
+  if(inspector && inspector.style.display !== 'none') renderInspector();
 }
 
 function toggleDraftsList(){
@@ -1057,31 +1042,29 @@ function safeGoHome(){
 }
 
 function goToWelcome(){
-  // Collect fields only if the fields screen is currently active
   if(document.getElementById('screen-field').classList.contains('active')){
     collectFieldsFromForm();
   }
   saveDraft();
-  showScreen('screen-welcome');   // show first so DOM elements are accessible
-  renderWelcomeScreen();          // then render into the now-visible screen
+  showScreen('screen-welcome');
+  renderWelcomeScreen();
 }
 
 function goToObs(){
   collectFieldsFromForm();
   saveDraft();
-  commitNamedDraft(); // lock into long-term storage if project name + number present
+  commitNamedDraft();
   renderObs();
   showScreen('screen-obs');
 }
 
 function goBackToFields(){
-  // Repopulate field DOM from reportData since fields were populated before going forward
-  populateFormFromData();
+  // Repopulate field DOM from reportData; preserve override approval from prior navigation
+  populateFormFromData(false);
   showScreen('screen-field');
 }
 
 function goToReview(){
-  // Do NOT call collectFieldsFromForm() — fields screen may not be active
   saveDraft();
   buildReview();
   showScreen('screen-review');
@@ -1090,7 +1073,7 @@ function goToReview(){
 // ── FIELDS ───────────────────────────────────────────────────
 function collectFieldsFromForm(){
   FIELD_KEYS.forEach(k => {
-    if(k === 'report_number') return; // managed separately by onReportNumInput
+    if(k === 'report_number') return;
     const el = document.getElementById('f-'+k);
     if(el) {
       const v = el.value.trim();
@@ -1100,20 +1083,20 @@ function collectFieldsFromForm(){
   });
 }
 
-function populateFormFromData(){
-  isPopulating = true; // suppress autosave during population
+// BUG 6 FIX: resetOverride=true by default; goBackToFields passes false to preserve approval
+function populateFormFromData(resetOverride = true){
+  isPopulating = true;
   FIELD_KEYS.forEach(k => {
     const el = document.getElementById('f-'+k);
     if(el){
       el.value = reportData[k] || '';
-      // Trigger resize for growing textareas
       if(el.tagName === 'TEXTAREA'){
         el.style.height = 'auto';
         el.style.height = el.scrollHeight + 'px';
       }
     }
   });
-  reportNumOverridden = false;
+  if(resetOverride) reportNumOverridden = false;
   updateReportNumUI(reportData['report_number'] || '');
   isPopulating = false;
 }
@@ -1158,12 +1141,10 @@ function isInteger(val){
   return /^\d+$/.test(val.trim());
 }
 
-
 function onReportNumInput(){
   const el  = document.getElementById('f-report_number');
   const raw = el.value;
 
-  // Silently store the converted value in reportData without touching el.value
   const converted = wordToInteger(raw);
   const finalVal  = converted !== null ? converted : raw.trim();
 
@@ -1176,7 +1157,6 @@ function onReportNumInput(){
 
 function onReportNumBlur(){
   const el  = document.getElementById('f-report_number');
-  // Let iOS fully commit its text first, then update the field from reportData
   setTimeout(()=>{
     const stored = reportData['report_number'] || '';
     el.value = stored;
@@ -1242,6 +1222,7 @@ function closeObsModal(){
   curObsPhotos = [];
 }
 
+// BUG 1 FIX: Single clean saveObs function; dead _origSaveObs / _reviewMode code removed
 function saveObs(){
   const text    = document.getElementById('obs-tx').value.trim();
   const followup= document.getElementById('fu-tx').value.trim();
@@ -1262,7 +1243,13 @@ function saveObs(){
   }
 
   closeObsModal();
-  renderObs();
+
+  // If review screen is visible, rebuild it; otherwise rebuild obs list
+  if(document.getElementById('screen-review').classList.contains('active')){
+    buildReview();
+  } else {
+    renderObs();
+  }
   saveDraft();
 }
 
@@ -1303,8 +1290,6 @@ function renderObs(){
 }
 
 // ── PHOTO RESIZE ─────────────────────────────────────────────
-// Resize to max 1920px on longest side, 85% JPEG quality
-// Reduces typical iPhone photo from 4–8MB to 300–600KB
 const MAX_PHOTO_PX  = 1920;
 const PHOTO_QUALITY = 0.85;
 
@@ -1314,14 +1299,12 @@ function resizePhoto(dataUrl){
     img.onload = ()=>{
       let w = img.naturalWidth, h = img.naturalHeight;
       if(w <= MAX_PHOTO_PX && h <= MAX_PHOTO_PX){
-        // Already small enough — re-encode at quality setting only
         const c = document.createElement('canvas');
         c.width = w; c.height = h;
         c.getContext('2d').drawImage(img, 0, 0);
         resolve(c.toDataURL('image/jpeg', PHOTO_QUALITY));
         return;
       }
-      // Scale down preserving aspect ratio
       if(w >= h){ h = Math.round(h * MAX_PHOTO_PX / w); w = MAX_PHOTO_PX; }
       else       { w = Math.round(w * MAX_PHOTO_PX / h); h = MAX_PHOTO_PX; }
       const c = document.createElement('canvas');
@@ -1329,7 +1312,7 @@ function resizePhoto(dataUrl){
       c.getContext('2d').drawImage(img, 0, 0, w, h);
       resolve(c.toDataURL('image/jpeg', PHOTO_QUALITY));
     };
-    img.onerror = ()=>resolve(dataUrl); // fallback: use original if resize fails
+    img.onerror = ()=>resolve(dataUrl);
     img.src = dataUrl;
   });
 }
@@ -1368,7 +1351,6 @@ function sitePhotoSelected(e){
   const files=Array.from(e.target.files);
   if(!files.length)return;
 
-  // Show progress bar, disable button
   const btn      = document.getElementById('site-photo-btn');
   const progress = document.getElementById('site-photo-progress');
   const lbl      = document.getElementById('site-photo-progress-lbl');
@@ -1440,12 +1422,8 @@ const FIELD_GROUPS_REV = [
 ];
 
 function buildReview(){
-  // Do NOT call collectFieldsFromForm() here — fields screen may not be active
-  // reportData is always kept current via oninput handlers and goToObs()
-
   let html='';
 
-  // Fields — grouped; report_number and project_name are read-only, others editable
   html+='<div><div class="rev-sec-lbl">Report Fields</div>';
   FIELD_GROUPS_REV.forEach(group=>{
     html+=`<div class="rev-group">`;
@@ -1473,7 +1451,6 @@ function buildReview(){
   });
   html+='</div>';
 
-  // Observations — editable text, add/remove
   html+=`<div>
     <div class="rev-sec-lbl">Observations (${observations.length})</div>`;
   if(observations.length){
@@ -1496,7 +1473,6 @@ function buildReview(){
   html+=`<button class="obs-add" onclick="addObsFromReview()" style="margin-top:4px;">+ Add Observation</button>`;
   html+='</div>';
 
-  // Site photos — view + remove + add
   html+=`<div>
     <div class="rev-sec-lbl">Site Photos (${sitePhotos.length})</div>`;
   if(sitePhotos.length){
@@ -1549,44 +1525,9 @@ function delObsFromReview(i){
   });
 }
 
+// BUG 1 FIX: addObsFromReview is clean — no dead _reviewMode flag
 function addObsFromReview(){
-  // Open modal then rebuild review on close
   openObsModal();
-  // Override save to rebuild review afterward
-  const origSave = window._origSaveObs;
-  window._reviewMode = true;
-}
-
-// Patch saveObs to rebuild review if opened from review screen
-const _origSaveObs = window.saveObs;
-function saveObs(){
-  const text    = document.getElementById('obs-tx').value.trim();
-  const followup= document.getElementById('fu-tx').value.trim();
-  const editIdx = parseInt(document.getElementById('obs-edit-idx').value);
-
-  if(!text){
-    document.getElementById('obs-status').textContent = 'Please add a description first.';
-    return;
-  }
-  document.getElementById('obs-status').textContent = '';
-
-  const obs = {description: text, followup: followup||null, photos:[...curObsPhotos]};
-
-  if(editIdx >= 0){
-    observations[editIdx] = obs;
-  } else {
-    observations.push(obs);
-  }
-
-  closeObsModal();
-
-  // If review screen is visible, rebuild it; otherwise rebuild obs list
-  if(document.getElementById('screen-review').classList.contains('active')){
-    buildReview();
-  } else {
-    renderObs();
-  }
-  saveDraft();
 }
 
 function removeSitePhotoFromReview(i){
@@ -1614,15 +1555,19 @@ function addSitePhotosFromReview(e){
 
 // ── EXPORT ───────────────────────────────────────────────────
 async function exportReport(){
-  // Sync any final edits from review form inputs
-  // (revFieldChange handles this live, but just in case)
   showScreen('screen-export');
   const msg=document.getElementById('exp-msg');
   try{
     msg.textContent='Building report…';
-    const ts=new Date().toISOString().split('T')[0];
+    const now=new Date();
+    const ts=now.toISOString().split('T')[0];
+    const timeStr=now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true}).replace(':','-').replace(/\s/g,'');
+    const jobName=(reportData.project_name||'Report').replace(/[\/\\:*?"<>|]/g,'-').trim();
+    const repNum=reportData.report_number?`Report # ${reportData.report_number}`:'No Report #';
+    const zipName=`${jobName} - ${repNum} - ${ts} ${timeStr}`;
+
     const report={
-      exported_at:new Date().toISOString(),
+      exported_at:now.toISOString(),
       fields:reportData,
       observations:observations.map((o,i)=>({
         id:i+1,
@@ -1657,12 +1602,11 @@ async function exportReport(){
     const blob=await zip.generateAsync({type:'blob',compression:'DEFLATE',compressionOptions:{level:6}});
     msg.textContent='Preparing download…';
     const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');a.href=url;a.download=`field-report_${ts}.zip`;
+    const a=document.createElement('a');a.href=url;a.download=`${zipName}.zip`;
     document.body.appendChild(a);a.click();document.body.removeChild(a);
     setTimeout(()=>URL.revokeObjectURL(url),5000);
     document.getElementById('exp-detail').textContent=
-      `Zip contains report.json, ${obsPhotoCount} observation photo${obsPhotoCount!==1?'s':''} in photos/obs/, and ${sitePhotos.length} site photo${sitePhotos.length!==1?'s':''} in photos/site/. Save to Files or share via AirDrop.`;
-    // Draft intentionally NOT cleared here — user can return to report and re-export
+      `Zip contains report.json, ${obsPhotoCount} observation photo${obsPhotoCount!==1?'s':''} in photos/obs/, and ${sitePhotos.length} site photo${sitePhotos.length!==1?'s':''} in photos/site/. Save to OneDrive to access on your computer.`;
     showScreen('screen-success');
   }catch(err){
     msg.textContent=`Error: ${err.message}. Try again.`;
