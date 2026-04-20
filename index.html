@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Field Report">
-<!-- v12 -->
+<!-- v13 -->
 <title>Field Report</title>
 <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
 <style>
@@ -357,7 +357,7 @@
       </div>
       <div class="field-item">
         <div class="field-label">Project Status Summary</div>
-        <textarea class="field-input" id="f-project_status" placeholder="e.g. The foundation walls are mostly formed…" autocomplete="off" oninput="autosave()" rows="1" style="resize:none;overflow:hidden;min-height:28px;" onInput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
+        <textarea class="field-input" id="f-project_status" placeholder="e.g. The foundation walls are mostly formed…" autocomplete="off" oninput="autoGrow(this);autosave()" rows="3" style="resize:none;overflow:hidden;min-height:72px;"></textarea>
       </div>
     </div>
 
@@ -981,6 +981,12 @@ function collectFieldsFromForm(){
   });
 }
 
+// Auto-grow a textarea to fit its content reliably
+function autoGrow(el){
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
+
 // BUG 6 FIX: resetOverride=true by default; goBackToFields passes false to preserve approval
 function populateFormFromData(resetOverride = true){
   isPopulating = true;
@@ -989,8 +995,8 @@ function populateFormFromData(resetOverride = true){
     if(el){
       el.value = reportData[k] || '';
       if(el.tagName === 'TEXTAREA'){
-        el.style.height = 'auto';
-        el.style.height = el.scrollHeight + 'px';
+        // Defer so the element is fully laid out before measuring scrollHeight
+        requestAnimationFrame(()=>autoGrow(el));
       }
     }
   });
