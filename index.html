@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Field Report">
-<!-- v13 -->
+<!-- v14 -->
 <title>Field Report</title>
 <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
 <style>
@@ -433,11 +433,11 @@
       <input type="hidden" id="obs-edit-idx" value="-1">
 
       <div class="modal-section-lbl">Item of Note <span style="color:var(--danger);">*</span></div>
-      <textarea class="modal-textarea" id="obs-tx" placeholder="Describe what you observed…" rows="1" style="min-height:44px;"></textarea>
+      <textarea class="modal-textarea" id="obs-tx" placeholder="Describe what you observed…" rows="3" style="min-height:72px;resize:none;overflow:hidden;" oninput="autoGrow(this)"></textarea>
       <div class="status err" id="obs-status"></div>
 
       <div class="modal-section-lbl">Follow-Up / Action Required</div>
-      <textarea class="modal-textarea" id="fu-tx" placeholder="Any required actions or follow-up…" rows="1" style="min-height:44px;"></textarea>
+      <textarea class="modal-textarea" id="fu-tx" placeholder="Any required actions or follow-up…" rows="3" style="min-height:72px;resize:none;overflow:hidden;" oninput="autoGrow(this)"></textarea>
 
       <div class="modal-section-lbl">Photos</div>
       <div style="font-size:13px;color:var(--text);font-family:var(--mono);line-height:1.6;">⚠︎ DO NOT TAKE PHOTOS FROM WITHIN THIS APP.</div>
@@ -1118,7 +1118,13 @@ function openObsModal(editIdx){
   document.getElementById('obs-status').textContent = '';
   renderPhotoGrid();
   document.getElementById('obs-modal').classList.add('active');
-  setTimeout(()=>document.getElementById('obs-tx').focus(), 350);
+  setTimeout(()=>{
+    const tx = document.getElementById('obs-tx');
+    const fu = document.getElementById('fu-tx');
+    autoGrow(tx);
+    autoGrow(fu);
+    tx.focus();
+  }, 350);
 }
 
 function closeObsModal(){
