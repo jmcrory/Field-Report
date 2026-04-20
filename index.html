@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Field Report">
-<!-- v14 -->
+<!-- v15 -->
 <title>Field Report</title>
 <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
 <style>
@@ -983,8 +983,11 @@ function collectFieldsFromForm(){
 
 // Auto-grow a textarea to fit its content reliably
 function autoGrow(el){
+  const scroller = el.closest('.modal-scroll') || el.closest('.form-body') || document.documentElement;
+  const savedTop = scroller.scrollTop;
   el.style.height = 'auto';
   el.style.height = el.scrollHeight + 'px';
+  scroller.scrollTop = savedTop;
 }
 
 // BUG 6 FIX: resetOverride=true by default; goBackToFields passes false to preserve approval
