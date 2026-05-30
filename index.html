@@ -672,7 +672,28 @@ function commitNamedDraft(){
   saveNamedDrafts(drafts);
   saveDraft();
 }
+function updateActiveNamedDraft(){
+  if(!activeDraftId) return;                 // no active saved draft yet → do nothing
+  const drafts = getNamedDrafts();
+  const slot   = drafts[activeDraftId];
+  if(!slot) return;                          // only UPDATE an existing slot — never create one here
 
+  // If the project name / report # has changed since this slot was made,
+  // don't overwrite it. Let "Next: Observations" spin off a new draft instead
+  // (this preserves the "use an old report as a template" workflow).
+  const displayName = draftDisplayName();
+  if(displayName && slot.displayName && displayName !== slot.displayName) return;
+
+  slot.updatedAt    = new Date().toISOString();
+  slot.reportData   = reportData;
+  slot.observations = observations.map(o=>({
+    description: o.description,
+    followup:    o.followup,
+    photos:      []
+  }));
+  drafts[activeDraftId] = slot;
+  saveNamedDrafts(drafts);
+}
 function deleteNamedDraft(id){
   const drafts = getNamedDrafts();
   delete drafts[id];
@@ -707,6 +728,7 @@ function saveDraft(){
   } catch(e){
     console.warn('saveDraft failed:', e);
   }
+  updateActiveNamedDraft();   // mirror every change into the active saved draft
 }
 
 function clearDraft(){
